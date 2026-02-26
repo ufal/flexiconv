@@ -48,6 +48,7 @@ Use `flexiconv info formats` for the authoritative, runtime view.
 - [TMX (`tmx`)](Format-tmx.md)
 - [FoLiA (`folia`)](Format-folia.md)
 - [BRAT stand-off (`brat`)](Format-brat.md)
+- [WebAnno TSV (`webanno`)](Format-webanno.md)
 - [Toolbox interlinear (`tbt`)](Format-tbt.md)
 
 Each page describes both directions where applicable (e.g. read-only vs read/write), and points to the corresponding I/O module under `flexiconv/io/`.

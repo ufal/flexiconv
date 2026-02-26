@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import mimetypes
 import os
+import re
 from typing import Optional
 
 
@@ -76,6 +77,8 @@ def mime_to_format(mime: str) -> Optional[str]:
         return "brat"
     if mime in {"text/folia+xml", "application/folia+xml"}:
         return "folia"
+    if mime in {"text/x-webanno-tsv", "text/tab-separated-values"}:
+        return "webanno"
     if mime in {"application/xml", "text/xml", "application/tei+xml"}:
         # XML will be further sniffed later as TEITOK vs generic TEI
         return "tei"
@@ -120,6 +123,8 @@ _EXT_TO_INPUT = {
     ".ann": "brat",
     ".folia.xml": "folia",
     ".folia": "folia",
+    ".webanno.tsv": "webanno",
+    ".webanno": "webanno",
 }
 _EXT_TO_OUTPUT = {
     ".rtf": "rtf",
@@ -141,6 +146,8 @@ def path_to_input_format(path: str) -> Optional[str]:
     path_lower = path.lower()
     if path_lower.endswith(".folia.xml"):
         return "folia"
+    if path_lower.endswith(".webanno.tsv"):
+        return "webanno"
     ext = os.path.splitext(path)[1].lower()
     if ext in _EXT_TO_INPUT:
         return _EXT_TO_INPUT[ext]
@@ -186,6 +193,10 @@ def path_to_input_format(path: str) -> Optional[str]:
     except OSError:
         snippet = ""
     if snippet:
+        lines = snippet.splitlines()
+        # WebAnno TSV: second line is #T_XX=Layer|field1|field2|...
+        if ext == ".tsv" and len(lines) >= 2 and re.match(r"#T_.{2}=[^|\t]+\|", lines[1]):
+            return "webanno"
         # CoNLL-U-Plus header
         if "# global.columns" in snippet:
             return "conllu"

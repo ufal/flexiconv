@@ -289,6 +289,14 @@ def _register_builtin_formats() -> None:
             description="Vertical/VRT corpora; converted to TEITOK-style TEI with <div>/<s>/<tok> and heuristic spacing.",
         )
     )
+    registry.register_input(
+        InputFormat(
+            name="webanno",
+            aliases=(),
+            loader=_lazy_loader("flexiconv.io.webanno", "load_webanno"),
+            description="WebAnno TSV (e.g. INCEpTION export); converted to TEITOK-style TEI with <s>/<tok> and standOff <spanGrp>.",
+        )
+    )
 
     registry.register_output(
         OutputFormat(
@@ -413,7 +421,7 @@ def _format_data_type(fmt_name: str) -> str:
         return "igt"
     if name in {"tcf", "folia", "vert"}:
         return "corpus"
-    if name in {"brat"}:
+    if name in {"brat", "webanno"}:
         return "stand-off annotations"
     return "other"
 

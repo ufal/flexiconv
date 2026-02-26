@@ -15,13 +15,33 @@ All conversions go via:
 - A **pivot model** in `flexiconv.core` (tokens, sentences, layers, anchors).
 - A **TEITOK-style TEI** representation (`flexiconv.io.teitok_xml`) that mirrors the conventions of `teitok-tools`.
 
-### Quick start
+### Install
 
-Once installed (editable install for development):
+Install from GitHub (requires Git):
 
 ```bash
-python -m pip install -e .
+pip install 'git+https://github.com/ufal/flexiconv'
+```
 
+To install optional extras (RTF, DOCX, Markdown support):
+
+```bash
+pip install 'git+https://github.com/ufal/flexiconv#egg=flexiconv[rtf,docx,md]'
+```
+
+For development, use an editable install from a clone:
+
+```bash
+git clone https://github.com/ufal/flexiconv
+cd flexiconv
+pip install -e .
+```
+
+### Quick start
+
+Once installed:
+
+```bash
 # Single-file conversion (format auto-detected where possible)
 flexiconv input.ext output.xml
 

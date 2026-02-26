@@ -1,0 +1,10 @@
+WebAnno TSV 3.2
+#T_SP=webanno.custom.Token|Lemma|POS|NER
+#Text=The cat sat on the mat .
+1-1	0-3	The	the	DET	_
+1-2	4-7	cat	cat	NOUN	_
+1-3	8-11	sat	sit	VERB	_
+1-4	12-15	on	on	ADP	_
+1-5	15-18	the	the	DET	LOC[1]
+1-6	19-22	mat	mat	NOUN	LOC[1]
+1-7	23-24	.	.	PUNCT	_

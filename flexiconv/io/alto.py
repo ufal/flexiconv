@@ -5,13 +5,13 @@ ALTO (Analyzed Layout and Text Object) encodes OCR text and layout with
 <Page>/<PrintSpace>/<TextBlock>/<TextLine>/<String>. This module builds a
 TEITOK-style TEI tree with:
 
-- <facsimile>/<surface>/<zone> for pages, text blocks, and lines
+- <facsimile>/<surface>/<zone> for pages, text blocks, and lines (with bbox and
+  optional points from ALTO BASELINE for finer-grained baseline curves)
 - <text> with <pb> (per page), <div> (per TextBlock), <lb> (per TextLine),
   and <tok> (per String, with bbox from HPOS/VPOS/WIDTH/HEIGHT)
 
-The resulting TEI tree is stored in Document.meta["_teitok_tei_root"] so that
-save_teitok can write it verbatim. We follow the same general structure as
-the PAGE XML converter (page_xml.py).
+BASELINE (when present on TextBlock or TextLine) is output as the TEI @points
+attribute on the corresponding zone and on <lb>/<div>.
 """
 
 from __future__ import annotations
@@ -43,6 +43,22 @@ def _bbox_from_alto(el: etree._Element) -> str:
     xmax = int(hpos + width)
     ymax = int(vpos + height)
     return f"{xmin} {ymin} {xmax} {ymax}"
+
+
+def _points_from_alto(el: etree._Element) -> Optional[str]:
+    """
+    Return the BASELINE attribute value from an ALTO element if present.
+
+    BASELINE is a sequence of points (e.g. "x1,y1 x2,y2 x3,y3") describing the
+    text baseline; more fine-grained than bbox for curved or slanted lines.
+    """
+    for attr in ("BASELINE", "baseline"):
+        val = el.get(attr)
+        if val and isinstance(val, str):
+            val = val.strip()
+            if val:
+                return val
+    return None
 
 
 def alto_to_tei_tree(
@@ -115,6 +131,7 @@ def alto_to_tei_tree(
         for block in regions_parent.xpath("./*[local-name()='TextBlock']"):
             block_idx += 1
             bbox_block = _bbox_from_alto(block)
+            points_block = _points_from_alto(block)
             facs_block_id = f"{facs_id}.b{block_idx}"
             div_id = f"{page_id}.b{block_idx}"
 
@@ -127,15 +144,20 @@ def alto_to_tei_tree(
             )
             if bbox_block:
                 zone_block.set("bbox", bbox_block)
+            if points_block:
+                zone_block.set("points", points_block)
 
             # Corresponding <div> in the TEI text.
             div = etree.SubElement(text_el, "div", id=div_id, corresp=f"#{facs_block_id}")
             if bbox_block:
                 div.set("bbox", bbox_block)
+            if points_block:
+                div.set("points", points_block)
 
             # TextLines within the block.
             for line in block.xpath("./*[local-name()='TextLine']"):
                 bbox_line = _bbox_from_alto(line)
+                points_line = _points_from_alto(line)
 
                 line_global_idx += 1
                 facs_line_id = f"{facs_block_id}.l{line_global_idx}"
@@ -149,6 +171,8 @@ def alto_to_tei_tree(
                 )
                 if bbox_line:
                     zone_line.set("bbox", bbox_line)
+                if points_line:
+                    zone_line.set("points", points_line)
 
                 # New line break in text, similar to PAGE XML.
                 if len(div) == 0:
@@ -159,6 +183,8 @@ def alto_to_tei_tree(
                 lb = etree.SubElement(div, "lb", id=lb_id, corresp=f"#{facs_line_id}")
                 if bbox_line:
                     lb.set("bbox", bbox_line)
+                if points_line:
+                    lb.set("points", points_line)
 
                 # Strings (words) in reading order.
                 strings = line.xpath("./*[local-name()='String']")
