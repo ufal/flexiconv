@@ -1,0 +1,467 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- (c) http://www.rrz.uni-hamburg.de/exmaralda -->
+<basic-transcription>
+<head>
+<meta-information>
+  <project-name>Spoken Portuguese</project-name>
+  <transcription-name>A_Fazenda.txt</transcription-name>
+  <referenced-file url="A_Fazenda.wav"/>
+  <ud-meta-information>
+    <ud-information attribute-name="Country">Brasil</ud-information>
+    <ud-information attribute-name="Date (DD/MM/YYYY)">18-08-1972</ud-information>
+    <ud-information attribute-name="Place of the recording">Rio de Janeiro</ud-information>
+    <ud-information attribute-name="Length of the recording (m's'')">45'</ud-information>
+    <ud-information attribute-name="Length of the transcribed excerpt ">10'47''</ud-information>
+    <ud-information attribute-name="Location of the transcribed excerpt ">Unknown</ud-information>
+    <ud-information attribute-name="Words">2079</ud-information>
+    <ud-information attribute-name="Acoustic quality">Good</ud-information>
+    <ud-information attribute-name="Source">Spoken Portuguese/Project NURC</ud-information>
+    <ud-information attribute-name="Code in CRPC">COD_OB2001</ud-information>
+    <ud-information attribute-name="Recording conditions">Not hidden recording</ud-information>
+    <ud-information attribute-name="Topic">A big property</ud-information>
+    <ud-information attribute-name="Communication interactivity">Semi-interactive</ud-information>
+    <ud-information attribute-name="Communication planning">Spontaneous</ud-information>
+    <ud-information attribute-name="Communication involvement">Unspecified</ud-information>
+    <ud-information attribute-name="Communication social context">Private</ud-information>
+    <ud-information attribute-name="Communication event structure">Monologue</ud-information>
+    <ud-information attribute-name="Communication channel">Face to face</ud-information>
+    <ud-information attribute-name="Transcriber">Rita Veloso</ud-information>
+    <ud-information attribute-name="Revisor">Rita Veloso</ud-information>
+    <ud-information attribute-name="Original physical format">Cassette</ud-information>
+    <ud-information attribute-name="Physical storage Id. (cassette and CD)">K-NURC 84 (Lado A)</ud-information>
+    <ud-information attribute-name="Use in other projects">Unknown</ud-information>
+  </ud-meta-information>
+  <comment></comment>
+  <transcription-convention>CLUL</transcription-convention>
+</meta-information>
+<speakertable>
+  <speaker id="SPK0">
+    <abbreviation>BAR</abbreviation>
+    <sex value="f"/>
+    <languages-used><language lang="por"/></languages-used>
+    <l1></l1>
+    <l2></l2>
+    <ud-speaker-information>
+      <ud-information attribute-name="Name">Unknown</ud-information>
+      <ud-information attribute-name="Age">30</ud-information>
+      <ud-information attribute-name="Geographical origin">Rio de Janeiro</ud-information>
+      <ud-information attribute-name="Residence">Rio de Janeiro</ud-information>
+      <ud-information attribute-name="Education">Graduated</ud-information>
+      <ud-information attribute-name="Profession">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence1">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence2">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence3">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence4">Unknown</ud-information>
+      <ud-information attribute-name="Role">Informant</ud-information>
+    </ud-speaker-information>
+    <comment>BAR produces the filled pause with an open vowel [E]</comment>
+  </speaker>
+  <speaker id="SPK1">
+    <abbreviation>BAS</abbreviation>
+    <sex value="f"/>
+    <languages-used><language lang="por"/></languages-used>
+    <l1></l1>
+    <l2></l2>
+    <ud-speaker-information>
+      <ud-information attribute-name="Name">Unknown</ud-information>
+      <ud-information attribute-name="Age">Unknown</ud-information>
+      <ud-information attribute-name="Geographical origin">Unknown</ud-information>
+      <ud-information attribute-name="Residence">Unknown</ud-information>
+      <ud-information attribute-name="Education">Unknown</ud-information>
+      <ud-information attribute-name="Profession">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence1">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence2">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence3">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence4">Unknown</ud-information>
+      <ud-information attribute-name="Role">Interviewer</ud-information>
+    </ud-speaker-information>
+    <comment></comment>
+  </speaker>
+  <speaker id="SPK2">
+    <abbreviation>BAT</abbreviation>
+    <sex value="f"/>
+    <languages-used><language lang="por"/></languages-used>
+    <l1></l1>
+    <l2></l2>
+    <ud-speaker-information>
+      <ud-information attribute-name="Name">Unknown</ud-information>
+      <ud-information attribute-name="Age">Unknown</ud-information>
+      <ud-information attribute-name="Geographical origin">Unknown</ud-information>
+      <ud-information attribute-name="Residence">Unknown</ud-information>
+      <ud-information attribute-name="Education">Unknown</ud-information>
+      <ud-information attribute-name="Profession">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence1">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence2">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence3">Unknown</ud-information>
+      <ud-information attribute-name="Linguistic influence4">Unknown</ud-information>
+      <ud-information attribute-name="Role">Interviewer</ud-information>
+    </ud-speaker-information>
+    <comment></comment>
+  </speaker>
+</speakertable>
+</head>
+<basic-body>
+<common-timeline>
+<tli id="T0" time="0.006666623959578063"/>
+<tli id="T47" time="8.033281871291566"/>
+<tli id="T48" time="13.653245869215873"/>
+<tli id="T49" time="36.933096736062474"/>
+<tli id="T50" time="42.10639692869505"/>
+<tli id="T51" time="46.21970391175471"/>
+<tli id="T52" time="48.606355289283655"/>
+<tli id="T53" time="54.65964984458054"/>
+<tli id="T54" time="55.986308012536576"/>
+<tli id="T55" time="63.07292928156805"/>
+<tli id="T56" time="65.08624971736063"/>
+<tli id="T1" time="66.07291006337817"/>
+<tli id="T2" time="67.46623447092999"/>
+<tli id="T57" time="71.27954337580864"/>
+<tli id="T58" time="88.37276720816678"/>
+<tli id="T59" time="91.75941217963246"/>
+<tli id="T3" time="92.89940487672031"/>
+<tli id="T4" time="93.59940039247599"/>
+<tli id="T60" time="96.0593846335603"/>
+<tli id="T61" time="101.81268111067618"/>
+<tli id="T62" time="117.35258156045263"/>
+<tli id="T63" time="119.22590289309407"/>
+<tli id="T5" time="123.29921013239627"/>
+<tli id="T6" time="124.1125382554648"/>
+<tli id="T64" time="126.07252569958072"/>
+<tli id="T65" time="128.01251327181797"/>
+<tli id="T66" time="132.97248149774404"/>
+<tli id="T7" time="144.57907381136945"/>
+<tli id="T8" time="145.5924006532253"/>
+<tli id="T67" time="148.49904869960136"/>
+<tli id="T68" time="151.5456958491285"/>
+<tli id="T69" time="157.43232480543597"/>
+<tli id="T70" time="162.11229482505976"/>
+<tli id="T71" time="167.36559450520727"/>
+<tli id="T72" time="179.35218438452864"/>
+<tli id="T73" time="187.34546651206273"/>
+<tli id="T74" time="191.98543678792907"/>
+<tli id="T9" time="193.23209546837012"/>
+<tli id="T10" time="194.23875568626644"/>
+<tli id="T11" time="195.6054135979799"/>
+<tli id="T75" time="200.45204921659317"/>
+<tli id="T46" time="205.8853477436493"/>
+<tli id="T76" time="209.29865921095328"/>
+<tli id="T12" time="218.94526408046272"/>
+<tli id="T13" time="220.17192288902507"/>
+<tli id="T77" time="222.50524127487742"/>
+<tli id="T78" time="230.39185741905828"/>
+<tli id="T79" time="244.07176978411243"/>
+<tli id="T80" time="246.53842064915634"/>
+<tli id="T81" time="249.1050708735939"/>
+<tli id="T82" time="252.16505127104023"/>
+<tli id="T83" time="252.8917132826342"/>
+<tli id="T14" time="253.78504089321768"/>
+<tli id="T84" time="256.8250214187853"/>
+<tli id="T15" time="257.571683302258"/>
+<tli id="T16" time="258.13834633882215"/>
+<tli id="T17" time="258.88500822229486"/>
+<tli id="T85" time="263.91164268781677"/>
+<tli id="T86" time="277.17822436737714"/>
+<tli id="T87" time="281.17153211916434"/>
+<tli id="T88" time="285.07150713551755"/>
+<tli id="T89" time="293.5314529402221"/>
+<tli id="T18" time="300.7914064322026"/>
+<tli id="T19" time="302.3380631908247"/>
+<tli id="T90" time="303.76472071817443"/>
+<tli id="T20" time="305.5913756830988"/>
+<tli id="T21" time="306.55136953327803"/>
+<tli id="T91" time="307.43803051990193"/>
+<tli id="T92" time="312.06466754784907"/>
+<tli id="T93" time="314.28465332638865"/>
+<tli id="T22" time="314.7713168754378"/>
+<tli id="T94" time="320.8846110463709"/>
+<tli id="T23" time="322.1046032309737"/>
+<tli id="T95" time="332.02453968282583"/>
+<tli id="T96" time="333.66452917688207"/>
+<tli id="T97" time="339.05782796018065"/>
+<tli id="T98" time="345.57111956868846"/>
+<tli id="T99" time="351.6577472437832"/>
+<tli id="T24" time="355.51105589241934"/>
+<tli id="T25" time="358.28437145960385"/>
+<tli id="T100" time="360.4110245027092"/>
+<tli id="T26" time="366.43098593820815"/>
+<tli id="T27" time="368.0776420562239"/>
+<tli id="T101" time="369.19096825747357"/>
+<tli id="T102" time="378.41757581752955"/>
+<tli id="T103" time="381.53755583061206"/>
+<tli id="T104" time="385.31086499173335"/>
+<tli id="T106" time="389.6041708217016"/>
+<tli id="T105" time="390.91749574173843"/>
+<tli id="T107" time="392.1841542940582"/>
+<tli id="T28" time="393.88414340375067"/>
+<tli id="T29" time="395.9974631989369"/>
+<tli id="T108" time="401.29742924680147"/>
+<tli id="T109" time="407.6773883761177"/>
+<tli id="T110" time="410.4307040714234"/>
+<tli id="T111" time="413.46401797303145"/>
+<tli id="T30" time="414.5173445586448"/>
+<tli id="T112" time="415.2240066983601"/>
+<tli id="T31" time="416.4306656350436"/>
+<tli id="T32" time="417.04399503932484"/>
+<tli id="T33" time="418.5439854302299"/>
+<tli id="T34" time="419.2906473137026"/>
+<tli id="T35" time="421.69729856311034"/>
+<tli id="T113" time="424.6772794730418"/>
+<tli id="T114" time="436.37053789814166"/>
+<tli id="T115" time="440.6905102239483"/>
+<tli id="T36" time="445.7838109290659"/>
+<tli id="T116" time="446.20380823851934"/>
+<tli id="T37" time="447.5104665345966"/>
+<tli id="T117" time="452.09043719482673"/>
+<tli id="T38" time="452.61043386367385"/>
+<tli id="T118" time="453.44376185862103"/>
+<tli id="T39" time="454.79041989845587"/>
+<tli id="T119" time="458.8370606419197"/>
+<tli id="T120" time="464.110360193946"/>
+<tli id="T121" time="472.6036391184484"/>
+<tli id="T122" time="478.89026551233053"/>
+<tli id="T40" time="484.71689485300175"/>
+<tli id="T123" time="485.43022361667664"/>
+<tli id="T41" time="486.13021913243233"/>
+<tli id="T42" time="494.95682925491366"/>
+<tli id="T43" time="497.2834810168064"/>
+<tli id="T124" time="499.4501338036693"/>
+<tli id="T125" time="502.1034501395814"/>
+<tli id="T127" time="505.20343028078514"/>
+<tli id="T126" time="506.4834220810242"/>
+<tli id="T128" time="507.57008178643537"/>
+<tli id="T44" time="508.2634106782314"/>
+<tli id="T45" time="510.2633978661049"/>
+<tli id="T129" time="514.7367025429818"/>
+<tli id="T130" time="520.2700004294315"/>
+<tli id="T131" time="523.8699773676037"/>
+<tli id="T133" time="541.0032009437193"/>
+<tli id="T134" time="549.7164784588879"/>
+<tli id="T136" time="553.8897850575837"/>
+<tli id="T137" time="563.7097221500422"/>
+<tli id="T138" time="566.4363713495097"/>
+<tli id="T139" time="568.8363559749578"/>
+<tli id="T140" time="571.6316474415111" type="intp"/>
+<tli id="T141" time="574.3763204853672"/>
+<tli id="T142" time="575.782978140838"/>
+<tli id="T143" time="581.1296105564197"/>
+<tli id="T144" time="583.209597231808"/>
+<tli id="T145" time="584.1629244580276"/>
+<tli id="T146" time="584.9229195894196"/>
+<tli id="T147" time="585.5562488655796"/>
+<tli id="T148" time="586.2562443813353"/>
+<tli id="T149" time="587.2695712231911"/>
+<tli id="T150" time="591.6362099167148"/>
+<tli id="T151" time="593.0497857490919" type="intp"/>
+<tli id="T152" time="597.1161748114879"/>
+<tli id="T153" time="601.569479616486"/>
+<tli id="T154" time="605.3361221536477"/>
+<tli id="T155" time="606.8094460487144"/>
+<tli id="T156" time="608.7361003730325"/>
+<tli id="T157" time="609.6743315161465" type="intp"/>
+<tli id="T158" time="614.3654913938997"/>
+<tli id="T159" time="618.7227030644805"/>
+<tli id="T160" time="621.450133508943"/>
+<tli id="T161" time="625.3759937761394"/>
+<tli id="T162" time="626.3026545065208"/>
+<tli id="T163" time="633.5092750068245"/>
+<tli id="T164" time="640.5158967883411"/>
+<tli id="T135" time="641.6625561093884"/>
+<tli id="T165" time="643.9892078712813"/>
+<tli id="T166" time="645.7910900775553" type="intp"/>
+<tli id="T132" time="658.8569333119738"/>
+</common-timeline>
+<tier id="TIE0" speaker="SPK0" category="v" type="t" display-name="BAR [v]"><event start="T0" end="T47">uma fazenda é [//] fica em Friburgo / vinte minutos / depois de Friburgo / portanto / no município / de Friburgo // </event>
+<event start="T47" end="T48">a fazenda é bem grande / tem / uma casa / tipo colonial // </event>
+<event start="T48" end="T49">a casa / é toda cercada / por um varandão / com [/] com / cerquinha de madeira / e depois então dentro / tem uma sala muito grande / com / duas portas / em que se abrem duas alas / que são duas alas de quartos diferentes / cada ala com o seu banheiro / servindo // </event>
+<event start="T49" end="T50">depois tem uma porta / bem grande de ferro / que separa da copa // </event>
+<event start="T50" end="T51">a copa não é absolutamente / como nós / vemos na cidade // </event>
+<event start="T51" end="T52"><![CDATA[a copa é <uma &sa> [/] uma sala de jantar // ]]></event>
+<event start="T52" end="T53">aquelas mesas enormes / cadeiras enormes / pronta a receber uma família / com muitos filhos // </event>
+<event start="T53" end="T54">hhh </event>
+<event start="T54" end="T55">a cozinha [//] logo em seguida vem a cozinha / também muito grande / uma coisa maravilhosa / que aqui na cidade não se vê / que é fogão a lenha // </event>
+<event start="T55" end="T56">você já viu fogão de lenha ? </event>
+<event start="T56" end="T1">é espectacular / não é ? </event>
+<event start="T1" end="T2">e esse  fogão </event>
+<event start="T2" end="T57">da fazenda é uma maravilha / conservado / por uma empregada antiquíssima // </event>
+<event start="T57" end="T58">então / o grande / prazer dela / é depois que termina / toda / função de alimentação / e de alimentar aqueles vândalos / de / hhh / arear / os metais / passar brasso / então o fogão fica lindo / maravilhoso // </event>
+<event start="T58" end="T59">aí chega na hora do jantar / bota lenha / fica tudo pretinho outra vez // </event>
+<event start="T59" end="T3">não tem importância // </event>
+<event start="T3" end="T4">hhh </event>
+<event start="T4" end="T60">todo dia ela faz / a mesma coisa // </event>
+<event start="T60" end="T61">bom / tirando / da cozinha / nós temos o pátio / bem grande // </event>
+<event start="T61" end="T62">nesse pátio / tem uma reserva de lenha / a parte fechada / tem uma escadaria de pedra / em cima / tem um morro / e nesse morro / tem uma pequena cabana / que foi feita para as minhas filhas // </event>
+<event start="T62" end="T63">é uma cabaninha de boneca // </event>
+<event start="T63" end="T5">então / nessa cabana de boneca / tem uma reprodução / do fogão de lenha da </event>
+<event start="T5" end="T6">fazenda / </event>
+<event start="T6" end="T64">sem / os dourados // </event>
+<event start="T64" end="T65">isto é muito importante // </event>
+<event start="T65" end="T66">logo a seguir depois / tem uma outra casa / que é a continuação da fazenda // </event>
+<event start="T66" end="T7"><![CDATA[então / <na parte de> [//] dois andares / na parte de baixo / tem uma sala grande / que está vazia actualmente / mas que futuramente seria / uma sala de jogos // ]]></event>
+<event start="T8" end="T67">jogo de botão / pingue-pongue / et cetera / et cetera // </event>
+<event start="T67" end="T68">e em cima tem / três quartos // </event>
+<event start="T68" end="T69">esses três quartos / estão mobiliados / com uma mobília idêntica / à que eu tenho no meu quarto // </event>
+<event start="T69" end="T70">e / tem um banheiro / um banheiro e uma sala // </event>
+<event start="T70" end="T71">aí normalmente / ficam os rapazes da casa / totalmente isolados // </event>
+<event start="T71" end="T72">agora / bem longe da casa / dessa fazenda / mas dentro ainda do [/] do território familiar / tem uma piscina / piscina natural // </event>
+<event start="T72" end="T73">aliás / a piscina até é muito interessante / descobriram esse ano / que esta piscina foi escavada / cem anos atrás // </event>
+<event start="T73" end="T74"><![CDATA[fizeram / sabe / porque o [//] a piscina furou / o &fund + ]]></event>
+<event start="T74" end="T9">não sei se tem interesse // </event>
+<event start="T11" end="T75"><![CDATA[o fundo da piscina deu defeito / tiveram que esvaziar / <e &p> [/] e pintar / e limpar // ]]></event>
+<event start="T75" end="T46">aí perceberam que estava toda quebrada / então resolveram tirar / porque a piscina natural / é toda de pedra // </event>
+<event start="T46" end="T76">então resolveram tirar aquelas pedras / e botar um cimento // </event>
+<event start="T76" end="T12"><![CDATA[quando começaram a [/] a tirar <a parte> [/] a parte externa / começaram a perceber / que tinham mais pedras para dentro / todas / &eh / manuseadas // ]]></event>
+<event start="T13" end="T77">um negócio assim engraçado / não é // </event>
+<event start="T77" end="T78">aí começaram / meus tios ficaram assim meio / curiosos / e chamaram pessoas / interessadas / e pessoas que entendem disso // </event>
+<event start="T78" end="T79"><![CDATA[então começaram a dizer / que realmente &al / muito tempo atrás / não foram definidos / tiraram amostras de pedras / não sei mais o quê / para saber há quanto tempo / que realmente aquela piscina tinha sido [/] sido cavada / não é / engraçado ? ]]></event>
+<event start="T79" end="T80">e agora está lá / como / relíquia histórica // </event>
+<event start="T80" end="T81">não sabemos o que vamos fazer da bendita da piscina / não é // </event>
+<event start="T81" end="T82">todo mundo sem coragem / de cobrir / a parte antiga // </event>
+<event start="T82" end="T83">um negócio assim </event>
+<event start="T83" end="T14">espectacular // </event>
+<event start="T84" end="T15">a água vem de </event>
+<event start="T15" end="T16"> um rio / </event>
+<event start="T17" end="T85"><![CDATA[e &s / ela é represada / num pequeno lugar // ]]></event>
+<event start="T85" end="T86"><![CDATA[e este lugar / justamente / quando os tios mandaram fazer / eles acharam / que seria um lugar / ideal / porque alargava / ligeiramente / quer dizer / o rio dava <uma &la> [//] um alargamento / tinha uma ligeira queda // ]]></event>
+<event start="T86" end="T87">então acharam engraçado / que realmente parecia que estava formado / aquilo ali // </event>
+<event start="T87" end="T88">mas formado com terra / dentro / e mato / et cetera / et cetera // </event>
+<event start="T88" end="T89">então eles represaram o rio / fecharam / mandaram cavar / mandaram limpar / e / conservaram as pedras naturais // </event>
+<event start="T89" end="T18"><![CDATA[e abriram <o &ri> [/] o rio / formou o poço / o poço depois cai / faz uma outra cachoeira / e é um lugar maravilhoso // ]]></event>
+<event start="T19" end="T90">não / a água não é tratada // </event>
+<event start="T90" end="T20">a água é limpinha de rio sem + </event>
+<event start="T21" end="T91">é // </event>
+<event start="T91" end="T92">rio sem casebres / para cima / a nascente / não tem problema // </event>
+<event start="T92" end="T93">que mais </event>
+<event start="T93" end="T22">que vocês querem ? </event>
+<event start="T23" end="T95"><![CDATA[não / a casa é bem [///] vamos ver / <se nós> [//] nós não temos o problema da cidade / de [/] hhh / de ficar devassado / absolutamente // ]]></event>
+<event start="T95" end="T96">agora / temos vizinho pertos // </event>
+<event start="T96" end="T97"><![CDATA[<o &lot> / o terreno da fazenda era muito grande / então foi loteado uma parte // ]]></event>
+<event start="T97" end="T98">então / você tem pessoas perto / sim / na base de cinquenta metros de distância / cem metros // </event>
+<event start="T98" end="T99"> você não fica inteiramente isolado / mas a casa / é [//] não é devassada absolutamente // </event>
+<event start="T99" end="T24">nós não temos vizinhos próximos / ou muito próximos // </event>
+<event start="T25" end="T100">fica no centro / dum terreno alto // </event>
+<event start="T100" end="T26"><![CDATA[quer dizer / ela de cima / <ela fica> [//] ela pode ver todo o resto da fazenda / certo ? ]]></event>
+<event start="T27" end="T101">ah / o resto da fazenda // </event>
+<event start="T101" end="T102"><![CDATA[no resto da fazenda <você tem> [//] perto da piscina / você tem uma outra casa bem grande / que era / a fazenda antiga // ]]></event>
+<event start="T102" end="T103">seria a sede da fazenda antiga / certo ? </event>
+<event start="T103" end="T104">mas / essa sede actualmente / é tida como mal-assombrada // </event>
+<event start="T104" end="T106">então / apesar de sermos todos pessoas esclarecidas / nós não temos / </event>
+<event start="T106" end="T105">muita vontade de ficar nela // </event>
+<event start="T105" end="T107">hhh </event>
+<event start="T107" end="T28">isso é evidente / hhh // </event>
+<event start="T29" end="T108">a gente entra / a gente faz aposta / sabe / de passar tempo lá / et cetera / et cetera // </event>
+<event start="T108" end="T109"><![CDATA[você sabe / todo mundo tem filho / então chega assim sete &ho / horas da noite / oito horas / tem que dar jantar / apesar de ter babá // ]]></event>
+<event start="T109" end="T110">então / você sai da fazenda / para ficar supervisionando // </event>
+<event start="T110" end="T111">essas coisas assim que / absolutamente não </event>
+<event start="T111" end="T30">te afectam muito // </event>
+<event start="T112" end="T31">inteiramente vazia // </event>
+<event start="T31" end="T32">nada // </event>
+<event start="T33" end="T34">enorme // </event>
+<event start="T35" end="T113">é muito mais bonita / porque é muito mais antiga // </event>
+<event start="T113" end="T114"><![CDATA[ela deve ser [///] está-se presumindo / que essa casa <já foi> [//] nós encontrámos / quer dizer / nós não / meus tios / <encontraram com> [//] quando compraram a fazenda / já tinha essa casa // ]]></event>
+<event start="T114" end="T115">aí mandaram construir / essa que nós moramos / quer dizer / é recente / é moderna // </event>
+<event start="T115" end="T36">esta outra casa / presume-se agora / que seja do tempo em que + </event>
+<event start="T116" end="T37">da piscina // </event>
+<event start="T37" end="T117">agora / correm sobre ela / milhões de lendas / não é / de </event>
+<event start="T117" end="T38">que andam + </event>
+<event start="T39" end="T119"><![CDATA[dizem que <foi um [/] um lugar> [//] <uma &sen> [//] tinha uma senzala // ]]></event>
+<event start="T119" end="T120">tem realmente uma [/] uma parte subterrânea / em que poderia ser uma senzala de escravos / entende ? </event>
+<event start="T120" end="T121">então parece / que houve histórias / de que houve fugas de escravos / et cetera / et cetera / durante o período da [//] do século passado // </event>
+<event start="T121" end="T122">então / que os escravos ali se refugiaram / mas que descobriram / e fizeram morticínio // </event>
+<event start="T122" end="T40"><![CDATA[então que <os escravos> [//] as almas dos escravos / clamam por vingança / et cetera / et cetera // ]]></event>
+<event start="T123" end="T41">exacto // </event>
+<event start="T41" end="T42"><![CDATA[e que <só atacam> [//] só atacariam / quer dizer / as almas atacariam / os fantasmas / sei lá quem / atacariam os brancos / principalmente sendo donos de terra // ]]></event>
+<event start="T42" end="T43">hhh </event>
+<event start="T43" end="T124">hhh </event>
+<event start="T124" end="T125">como você vê / não é muito interessante // </event>
+<event start="T125" end="T127">eu mesma levei um susto agora / esse fim de + </event>
+<event start="T127" end="T126"><![CDATA[ ]]></event>
+<event start="T126" end="T128">estou fugindo do meu problema de </event>
+<event start="T128" end="T44">casa / não é ? </event>
+<event start="T45" end="T129">nós levámos um susto / tremendo essa [//] agora em Julho // </event>
+<event start="T129" end="T130"><![CDATA[normalmente / <eu sempre> [//] a gente sempre conta as bravatas / que você não tem medo disso / que você não tem medo daquilo // ]]></event>
+<event start="T130" end="T131"><![CDATA[imagine / alma do outro mundo / &boba / bobagem // ]]></event>
+<event start="T131" end="T133">então eu falei / para as minhas crianças / que absolutamente / não acreditassem nessas histórias / porque / isso era coisa de gente ignorante / e as pessoas da fazenda não [/] não [/] não vinham à cidade / não tinham meios de comunicação / et cetera / et cetera / então / eram pessoas burrinhas / pobrezinhas / coitadinhas // </event>
+<event start="T133" end="T134">então que não tinham a menor possibilidade / que cabia a nós / como pessoas esclarecidas / ensiná-las / e mostrar as coisas / como deveriam ser // </event>
+<event start="T134" end="T136">elas / como meninas da cidade / aquela lengalenga toda / não é // </event>
+<event start="T136" end="T137">então / uma noite / nós fomos ao chiqueiro / que fica perto dessa fazenda / e escureceu muito rapidamente / porque estava ameaçando chuva // </event>
+<event start="T137" end="T138">então / o negócio era o seguinte //  </event>
+<event start="T138" end="T139">" nós não vamos passar / perto da casa velha " //  </event>
+<event start="T139" end="T140">" sim / nós vamos passar perto da casa velha // </event>
+<event start="T140" end="T141">absolutamente / não tem perigo " //  </event>
+<event start="T141" end="T142">" está bom " // </event>
+<event start="T142" end="T143">e foi aquela coisa / uma pilha de crianças / sete crianças / eu / e mais duas moças // </event>
+<event start="T143" end="T144">" vamos passar em frente da casa velha " // </event>
+<event start="T144" end="T145">passámos // </event>
+<event start="T145" end="T146">aí // </event>
+<event start="T146" end="T147">" vamos entrar " ? </event>
+<event start="T147" end="T148">" vamos entrar " // </event>
+<event start="T148" end="T149">e entrámos // </event>
+<event start="T149" end="T150">as crianças / apavoradas / mas ninguém com coragem de demonstrar // </event>
+<event start="T150" end="T151">nós não tínhamos nada // </event>
+<event start="T151" end="T152">bom / começou realmente a chover / porque estava ameaçando chover // </event>
+<event start="T152" end="T153">um vento / sabe dessas coisas de cinema / aquele Morro dos Ventos Uivantes ? </event>
+<event start="T153" end="T154"> o vento batendo / as janelas batendo / aquela coisa toda // </event>
+<event start="T154" end="T155">aí nós ficámos meio assim // </event>
+<event start="T155" end="T156">" vamos esperar passar a chuva / não sei mais o quê " //  </event>
+<event start="T156" end="T157">" está bom " // </event>
+<event start="T157" end="T158">aí sentámos no chão / ficámos contando história para as crianças / brincando // </event>
+<event start="T158" end="T159">de repente / nós escutámos um barulho / mas uma coisa assim // </event>
+<event start="T159" end="T160"><![CDATA[nós nos olhámos / nos entreolhámos / e &fo + ]]></event>
+<event start="T160" end="T161">" alguém tem que saber o que é que está havendo / não é / porque o barulho não é normal " // </event>
+<event start="T161" end="T162">hhh </event>
+<event start="T162" end="T163">aí fomos ver / as três juntas de mãos dadas / pálidas / brancas / só faltava os cabelos estarem eriçados / disfarçando para as crianças // </event>
+<event start="T163" end="T164"><![CDATA[dois cavalos / entraram dentro da casa / hhh / e <começaram a [/] a ficar> [//] eles ficaram desesperados // ]]></event>
+<event start="T164" end="T135">estavam presos / não é // </event>
+<event start="T135" end="T165">mas faziam um barulho / ensurdecedor // </event>
+<event start="T165" end="T166">mas não foi nada de mais / não // </event>
+<event start="T166" end="T132">mas que deu susto / deu // </event>
+</tier><tier id="TIE1" speaker="SPK1" category="v" type="t" display-name="BAS [v]"><event start="T1" end="T2">é xxx // </event>
+<event start="T59" end="T3">hhh </event>
+<event start="T3" end="T4">xxx // </event>
+<event start="T5" end="T6">hhh </event>
+<event start="T7" end="T8">hum // </event>
+<event start="T9" end="T10">tem / tem // </event>
+<event start="T12" end="T13">hum hum // </event>
+<event start="T83" end="T14"><![CDATA[ ]]></event>
+<event start="T16" end="T17"><![CDATA[ ]]></event>
+<event start="T18" end="T19">a água é tratada ? </event>
+<event start="T93" end="T22">bom / </event>
+<event start="T22" end="T94"><![CDATA[<e o> [//] e a casa fica por exemplo / assim / é presa a outra casa / da fazenda / ou ela é solta ?  ]]></event>
+<event start="T94" end="T23">como é que é ? </event>
+<event start="T24" end="T25">a casa fica assim no centro / do terreno ? </event>
+<event start="T26" end="T27">o que é que tem no resto da fazenda ? </event>
+<event start="T106" end="T105">hhh </event>
+<event start="T28" end="T29">vocês nunca entraram lá ? </event>
+<event start="T112" end="T31"><![CDATA[ ]]></event>
+<event start="T34" end="T35"><![CDATA[ ]]></event>
+<event start="T36" end="T116">é / da </event>
+<event start="T116" end="T37">piscina // </event>
+<event start="T117" end="T38">porquê ? </event>
+<event start="T38" end="T118">qual lenda ? </event>
+<event start="T118" end="T39">o que é que dizem ? </event>
+<event start="T40" end="T123">aí xxx ficar com medo / não é / </event>
+<event start="T123" end="T41">xxx // </event>
+<event start="T42" end="T43">yyyy // </event>
+<event start="T43" end="T124">hhh </event>
+<event start="T124" end="T125"><![CDATA[ ]]></event>
+<event start="T125" end="T127"><![CDATA[ ]]></event>
+<event start="T127" end="T126"><![CDATA[esse &fi + ]]></event>
+<event start="T126" end="T128"><![CDATA[ ]]></event>
+<event start="T128" end="T44">não / não / </event>
+<event start="T44" end="T45">não está não / pode falar à vontade // </event>
+<event start="T166" end="T132">xxx + </event>
+</tier><tier id="TIE2" speaker="SPK2" category="v" type="t" display-name="BAT [v]"><event start="T9" end="T10">xxx não / claro / </event>
+<event start="T10" end="T11">todo o interesse // </event>
+<event start="T83" end="T14">você disse que tem uma piscina </event>
+<event start="T14" end="T84"> de água natural / quer dizer / a [/] a água vem de [/] </event>
+<event start="T84" end="T15">de onde ? </event>
+<event start="T16" end="T17">de onde ? </event>
+<event start="T20" end="T21">que corre // </event>
+<event start="T111" end="T30">está vazia </event>
+<event start="T30" end="T112">a casa ?  </event>
+<event start="T112" end="T31">não tem nada no lugar ? </event>
+<event start="T32" end="T33">é muito grande ela ? </event>
+<event start="T34" end="T35"><![CDATA[e do mesmo jeito / <o mesmo> [//] a mesma construção que a + ]]></event>
+<event start="T127" end="T126"></event>
+</tier></basic-body>
+<tierformat-table><timeline-item-format show-every-nth-numbering="1" show-every-nth-absolute="1" absolute-time-format="time" miliseconds-digits="1"/><tier-format tierref="TIE4"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">black</property><property name="chunk-border-style">solid</property><property name="bg-color">white</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">12</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="TIE1"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">black</property><property name="chunk-border-style">solid</property><property name="bg-color">white</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">12</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="EMPTY-EDITOR"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">white</property><property name="chunk-border-style">solid</property><property name="bg-color">lightGray</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">2</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="EMPTY"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">white</property><property name="chunk-border-style">solid</property><property name="bg-color">white</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">2</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="TIE0"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">black</property><property name="chunk-border-style">solid</property><property name="bg-color">white</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">12</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="SUB-ROW-LABEL"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">black</property><property name="chunk-border-style">solid</property><property name="bg-color">white</property><property name="text-alignment">Right</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">8</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="ROW-LABEL"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Bold</property><property name="font-color">black</property><property name="chunk-border-style">solid</property><property name="bg-color">lightGray</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">10</property><property name="font-name">Times New Roman</property></tier-format><tier-format tierref="COLUMN-LABEL"><property name="row-height-calculation">Generous</property><property name="fixed-row-height">10</property><property name="font-face">Plain</property><property name="font-color">black</property><property name="chunk-border-style">solid</property><property name="bg-color">lightGray</property><property name="text-alignment">Left</property><property name="chunk-border-color">#R00G00B00</property><property name="chunk-border"></property><property name="font-size">7</property><property name="font-name">Times New Roman</property></tier-format></tierformat-table></basic-transcription>

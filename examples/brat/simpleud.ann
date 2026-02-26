@@ -1,0 +1,35 @@
+T1	Token 0 3	The
+T2	Token 4 7	cat
+T3	Token 8 11	sat
+T4	Token 12 14	on
+T5	Token 15 18	the
+T6	Token 19 22	mat
+T7	Token 22 23	.
+
+A1	pos T1 DET
+A2	pos T2 NOUN
+A3	pos T3 VERB
+A4	pos T4 ADP
+A5	pos T5 DET
+A6	pos T6 NOUN
+A7	pos T7 PUNCT
+
+A8	lemma T1 the
+A9	lemma T2 cat
+A10	lemma T3 sit
+A11	lemma T4 on
+A12	lemma T5 the
+A13	lemma T6 mat
+A14	lemma T7 _
+
+R1	nsubj Arg1:T3 Arg2:T2
+R2	obl Arg1:T3 Arg2:T4
+R3	case Arg1:T4 Arg2:T5?  # Complex: "on" is case for "the mat"
+R4	nmod Arg1:T4 Arg2:T6
+R5	punct Arg1:T3 Arg2:T7
+R6	det Arg1:T2 Arg2:T1
+R7	det Arg1:T6 Arg2:T5
+
+# Alternative with nested dependencies:
+# R2	case Arg1:T6 Arg2:T4  # "on" as case marker for "mat"
+# R3	nmod:obl Arg1:T3 Arg2:T6  # "mat" as oblique of "sat"

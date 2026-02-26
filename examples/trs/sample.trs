@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Trans audio_filename="sample.wav">
+  <Episode>
+    <Section startTime="0.0" endTime="2.5">
+      <Turn startTime="0.0" endTime="2.5" speaker="spk1">
+        <Sync time="0.0"/>
+        Hello
+        <Sync time="1.2"/>
+        world.
+      </Turn>
+    </Section>
+  </Episode>
+</Trans>

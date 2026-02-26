@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <title></title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+  <meta name='ocr-system' content='tesseract 5.5.0' />
+  <meta name='ocr-capabilities' content='ocr_page ocr_carea ocr_par ocr_line ocrx_word ocrp_dir ocrp_lang ocrp_wconf'/>
+ </head>
+ <body>
+  <div class='ocr_page' id='page_1' title='image "/var/folders/5n/pxl0p9vx1hscltql39n2f1580000gn/T/tess_vatsr6oe_input.PPM"; bbox 0 0 2162 3340; ppageno 0; scan_res 70 70'>
+   <div class='ocr_carea' id='block_1_1' title="bbox 348 1263 1784 1510">
+    <p class='ocr_par' id='par_1_1' lang='eng' title="bbox 348 1263 1784 1510">
+     <span class='ocr_line' id='line_1_1' title="bbox 802 1263 1327 1337; baseline -0.002 0; x_size 94.666664; x_descenders 23.666666; x_ascenders 23.666668">
+      <span class='ocrx_word' id='word_1_1' title='bbox 802 1263 1327 1337; x_wconf 96'>METHODIUS</span>
+     </span>
+     <span class='ocr_line' id='line_1_2' title="bbox 348 1427 1784 1510; baseline -0.001 -11; x_size 83.703705; x_descenders 20.925926; x_ascenders 20.925926">
+      <span class='ocrx_word' id='word_1_2' title='bbox 348 1436 448 1499; x_wconf 96'>AN</span>
+      <span class='ocrx_word' id='word_1_3' title='bbox 491 1437 614 1510; x_wconf 93'>(ZU)</span>
+      <span class='ocrx_word' id='word_1_4' title='bbox 660 1436 1021 1509; x_wconf 92'>SISTELIUS,</span>
+      <span class='ocrx_word' id='word_1_5' title='bbox 1062 1427 1245 1499; x_wconf 95'>UBER</span>
+      <span class='ocrx_word' id='word_1_6' title='bbox 1285 1436 1427 1499; x_wconf 93'>DEN</span>
+      <span class='ocrx_word' id='word_1_7' title='bbox 1469 1435 1784 1498; x_wconf 92'>AUSSATZ</span>
+     </span>
+    </p>
+   </div>
+   <div class='ocr_carea' id='block_1_2' title="bbox 303 2886 1651 2934">
+    <p class='ocr_par' id='par_1_2' lang='eng' title="bbox 303 2886 1651 2934">
+     <span class='ocr_line' id='line_1_3' title="bbox 303 2886 1651 2934; baseline -0.001 -16; x_size 39; x_descenders 11; x_ascenders 8">
+      <span class='ocrx_word' id='word_1_8' title='bbox 303 2886 528 2934; x_wconf 94'>Methodius.</span>
+      <span class='ocrx_word' id='word_1_9' title='bbox 1609 2893 1651 2928; x_wconf 93'>99</span>
+     </span>
+    </p>
+   </div>
+  </div>
+ </body>
+</html>

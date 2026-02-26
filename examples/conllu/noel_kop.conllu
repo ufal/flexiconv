@@ -1,0 +1,729 @@
+# newdoc id = noel_kop
+# sent_id = noel_kop_s-1
+# text = L'prochain kôp.
+1	L'	le	DET	_	_	_	_	_	tokId=w-1|SpaceAfter=No
+2	prochain	prochain	ADJ	_	_	_	_	_	tokId=w-2
+3	kôp	kôp	NOUN	_	_	_	_	_	tokId=w-3|SpaceAfter=No
+4	.	.	PUNCT	_	_	_	_	_	tokId=w-4
+
+# sent_id = noel_kop_s-2
+# text = Dins l'pétite majon, tchand qu'Fine elle s'a l'vée, elle a bin fait attintion d'nin faire d'brût.
+1	Dins	dins	ADP	_	_	_	_	_	tokId=w-5
+2	l'	le	DET	_	_	_	_	_	tokId=w-6|SpaceAfter=No
+3	pétite	pétit	ADJ	_	_	_	_	_	tokId=w-7
+4	majon	majon	NOUN	_	_	_	_	_	tokId=w-8|SpaceAfter=No
+5	,	,	PUNCT	_	_	_	_	_	tokId=w-9
+6	tchand	tchand	SCONJ	_	_	_	_	_	tokId=w-10
+7	qu'	que	SCONJ	_	_	_	_	_	tokId=w-11|SpaceAfter=No
+8	Fine	Fine	PROPN	_	_	_	_	_	tokId=w-12
+9	elle	i	PRON	_	_	_	_	_	tokId=w-13
+10	s'	se	PRON	_	_	_	_	_	tokId=w-14|SpaceAfter=No
+11	a	avoir	VERB	_	_	_	_	_	tokId=w-15
+12	l'vée	lever	VERB	_	_	_	_	_	tokId=w-16|SpaceAfter=No
+13	,	,	PUNCT	_	_	_	_	_	tokId=w-17
+14	elle	i	PRON	_	_	_	_	_	tokId=w-18
+15	a	avoir	VERB	_	_	_	_	_	tokId=w-19
+16	bin	bin	ADV	_	_	_	_	_	tokId=w-20
+17	fait	faire	VERB	_	_	_	_	_	tokId=w-21
+18	attintion	attintion	NOUN	_	_	_	_	_	tokId=w-22
+19	d'	de	ADP	_	_	_	_	_	tokId=w-23|SpaceAfter=No
+20	nin	nin	ADV	_	_	_	_	_	tokId=w-24
+21	faire	faire	VERB	_	_	_	_	_	tokId=w-25
+22	d'	de	ADP	_	_	_	_	_	tokId=w-26|SpaceAfter=No
+23	brût	brût	NOUN	_	_	_	_	_	tokId=w-27|SpaceAfter=No
+24	.	.	PUNCT	_	_	_	_	_	tokId=w-28
+
+# sent_id = noel_kop_s-3
+# text = Ch'est qui n'faudrôt nin réveiller les chinq afants qui dormt.tent acore, pa-drire l'rideau, dins l'même pétite champe.
+1	Ch'	chà	PRON	_	_	_	_	_	tokId=w-29|SpaceAfter=No
+2	est	ête	VERB	_	_	_	_	_	tokId=w-30
+3	qui	que	SCONJ	_	_	_	_	_	tokId=w-31
+4	n'	ne	PART	_	_	_	_	_	tokId=w-32|SpaceAfter=No
+5	faudrôt	falloir	VERB	_	_	_	_	_	tokId=w-33
+6	nin	nin	ADV	_	_	_	_	_	tokId=w-34
+7	réveiller	réveiller	VERB	_	_	_	_	_	tokId=w-35
+8	les	le	DET	_	_	_	_	_	tokId=w-36
+9	chinq	chinq	NUM	_	_	_	_	_	tokId=w-37
+10	afants	afant	NOUN	_	_	_	_	_	tokId=w-38
+11	qui	qui	PRON	_	_	_	_	_	tokId=w-39
+12	dormt.tent	dormir	VERB	_	_	_	_	_	tokId=w-40
+13	acore	acore	ADV	_	_	_	_	_	tokId=w-41|SpaceAfter=No
+14	,	,	PUNCT	_	_	_	_	_	tokId=w-42
+15	pa-drire	pa-drire	ADP	_	_	_	_	_	tokId=w-43
+16	l'	le	DET	_	_	_	_	_	tokId=w-44|SpaceAfter=No
+17	rideau	rideau	NOUN	_	_	_	_	_	tokId=w-45|SpaceAfter=No
+18	,	,	PUNCT	_	_	_	_	_	tokId=w-46
+19	dins	dins	ADP	_	_	_	_	_	tokId=w-47
+20	l'	le	DET	_	_	_	_	_	tokId=w-48|SpaceAfter=No
+21	même	même	ADJ	_	_	_	_	_	tokId=w-49
+22	pétite	pétit	ADJ	_	_	_	_	_	tokId=w-50
+23	champe	champe	NOUN	_	_	_	_	_	tokId=w-51|SpaceAfter=No
+24	.	.	PUNCT	_	_	_	_	_	tokId=w-52
+
+# sent_id = noel_kop_s-4
+# text = A s'matin, elle a d'l'ouvrache, et elle ne veut nin les avoir dins ses pids.
+1	A	au	ADP	_	_	_	_	_	tokId=w-53
+2	s'	IDEM-1	DET	_	_	_	_	_	tokId=w-54|SpaceAfter=No
+3	matin	matin	NOUN	_	_	_	_	_	tokId=w-55|SpaceAfter=No
+4	,	,	PUNCT	_	_	_	_	_	tokId=w-56
+5	elle	i	PRON	_	_	_	_	_	tokId=w-57
+6	a	avoir	VERB	_	_	_	_	_	tokId=w-58
+7	d'l'	du	ADP	_	_	_	_	_	tokId=w-59|SpaceAfter=No
+8	ouvrache	ouvrache	NOUN	_	_	_	_	_	tokId=w-60|SpaceAfter=No
+9	,	,	PUNCT	_	_	_	_	_	tokId=w-61
+10	et	et	CCONJ	_	_	_	_	_	tokId=w-62
+11	elle	i	PRON	_	_	_	_	_	tokId=w-63
+12	ne	ne	PART	_	_	_	_	_	tokId=w-64
+13	veut	vouloir	VERB	_	_	_	_	_	tokId=w-65
+14	nin	nin	ADV	_	_	_	_	_	tokId=w-66
+15	les	le	PRON	_	_	_	_	_	tokId=w-67
+16	avoir	avoir	VERB	_	_	_	_	_	tokId=w-68
+17	dins	dins	ADP	_	_	_	_	_	tokId=w-69
+18	ses	sin	ADJ	_	_	_	_	_	tokId=w-70
+19	pids	pid	NOUN	_	_	_	_	_	tokId=w-71|SpaceAfter=No
+20	.	.	PUNCT	_	_	_	_	_	tokId=w-72
+
+# sent_id = noel_kop_s-5
+# text = Ene fôs in bas, elle a tout'd'sute compris pourquô qu'les cornets d'fabrique is n'ont nin été aujourd'hû.
+1	Ene	ene	DET	_	_	_	_	_	tokId=w-73
+2	fôs	fôs	NOUN	_	_	_	_	_	tokId=w-74
+3	in	in	ADP	_	_	_	_	_	tokId=w-75
+4	bas	bas	NOUN	_	_	_	_	_	tokId=w-76|SpaceAfter=No
+5	,	,	PUNCT	_	_	_	_	_	tokId=w-77
+6	elle	i	PRON	_	_	_	_	_	tokId=w-78
+7	a	avoir	VERB	_	_	_	_	_	tokId=w-79
+8	tout'	tout'	ADV	_	_	_	_	_	tokId=w-80|SpaceAfter=No
+9	d'	d'	ADP	_	_	_	_	_	tokId=w-81|SpaceAfter=No
+10	sute	sute	NOUN	_	_	_	_	_	tokId=w-82
+11	compris	comprinte	VERB	_	_	_	_	_	tokId=w-83
+12	pourquô	pourquô	ADV	_	_	_	_	_	tokId=w-84
+13	qu'	que	SCONJ	_	_	_	_	_	tokId=w-85|SpaceAfter=No
+14	les	le	DET	_	_	_	_	_	tokId=w-86
+15	cornets	cornet	NOUN	_	_	_	_	_	tokId=w-87
+16	d'	de	ADP	_	_	_	_	_	tokId=w-88|SpaceAfter=No
+17	fabrique	fabrique	NOUN	_	_	_	_	_	tokId=w-89
+18	is	i	PRON	_	_	_	_	_	tokId=w-90
+19	n'	ne	PART	_	_	_	_	_	tokId=w-91|SpaceAfter=No
+20	ont	avoir	VERB	_	_	_	_	_	tokId=w-92
+21	nin	nin	ADV	_	_	_	_	_	tokId=w-93
+22	été	ête	VERB	_	_	_	_	_	tokId=w-94
+23	aujourd'hû	aujourd'hû	ADV	_	_	_	_	_	tokId=w-95|SpaceAfter=No
+24	.	.	PUNCT	_	_	_	_	_	tokId=w-96
+
+# sent_id = noel_kop_s-6
+# text = D'siré, s'n'homme, i s'a bin l'vé à l'heure pou li daller à l'ouvrache, comme d'habitute, mais i n'a nin pris s'musette et s'galu.
+1	D'siré	Désiré	PROPN	_	_	_	_	_	tokId=w-97|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-98
+3	s'n'	sin	ADJ	_	_	_	_	_	tokId=w-99|SpaceAfter=No
+4	homme	homme	NOUN	_	_	_	_	_	tokId=w-100|SpaceAfter=No
+5	,	,	PUNCT	_	_	_	_	_	tokId=w-101
+6	i	i	PRON	_	_	_	_	_	tokId=w-102
+7	s'	se	PRON	_	_	_	_	_	tokId=w-103|SpaceAfter=No
+8	a	avoir	VERB	_	_	_	_	_	tokId=w-104
+9	bin	bin	ADV	_	_	_	_	_	tokId=w-105
+10	l'vé	lever	VERB	_	_	_	_	_	tokId=w-106
+11	à	à	ADP	_	_	_	_	_	tokId=w-107
+12	l'	le	DET	_	_	_	_	_	tokId=w-108|SpaceAfter=No
+13	heure	heure	NOUN	_	_	_	_	_	tokId=w-109
+14	pou	pou	ADP	_	_	_	_	_	tokId=w-110
+15	li	li	PRON	_	_	_	_	_	tokId=w-111
+16	daller	aller	VERB	_	_	_	_	_	tokId=w-112
+17	à	à	ADP	_	_	_	_	_	tokId=w-113
+18	l'	le	DET	_	_	_	_	_	tokId=w-114|SpaceAfter=No
+19	ouvrache	ouvrache	NOUN	_	_	_	_	_	tokId=w-115|SpaceAfter=No
+20	,	,	PUNCT	_	_	_	_	_	tokId=w-116
+21	comme	comme	SCONJ	_	_	_	_	_	tokId=w-117
+22	d'	de	ADP	_	_	_	_	_	tokId=w-118|SpaceAfter=No
+23	habitute	habitute	NOUN	_	_	_	_	_	tokId=w-119|SpaceAfter=No
+24	,	,	PUNCT	_	_	_	_	_	tokId=w-120
+25	mais	mais	CCONJ	_	_	_	_	_	tokId=w-121
+26	i	i	PRON	_	_	_	_	_	tokId=w-122
+27	n'	ne	PART	_	_	_	_	_	tokId=w-123|SpaceAfter=No
+28	a	avoir	VERB	_	_	_	_	_	tokId=w-124
+29	nin	nin	ADV	_	_	_	_	_	tokId=w-125
+30	pris	printe	VERB	_	_	_	_	_	tokId=w-126
+31	s'	sin	ADJ	_	_	_	_	_	tokId=w-127|SpaceAfter=No
+32	musette	musette	NOUN	_	_	_	_	_	tokId=w-128
+33	et	et	CCONJ	_	_	_	_	_	tokId=w-129
+34	s'	sin	ADJ	_	_	_	_	_	tokId=w-130|SpaceAfter=No
+35	galu	galu	NOUN	_	_	_	_	_	tokId=w-131|SpaceAfter=No
+36	.	.	PUNCT	_	_	_	_	_	tokId=w-132
+
+# sent_id = noel_kop_s-7
+# text = D'siré, ch'est nin in qui babèle grammint, mais cheul'sémaine, Fine a bin vu qu'i'étôt pus imbèrné qu'd'habitute.
+1	D'siré	Désiré	PROPN	_	_	_	_	_	tokId=w-133|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-134
+3	ch'	chà	PRON	_	_	_	_	_	tokId=w-135|SpaceAfter=No
+4	est	ête	VERB	_	_	_	_	_	tokId=w-136
+5	nin	nin	ADV	_	_	_	_	_	tokId=w-137
+6	in	in	DET	_	_	_	_	_	tokId=w-138
+7	qui	qui	PRON	_	_	_	_	_	tokId=w-139
+8	babèle	babeler	VERB	_	_	_	_	_	tokId=w-140
+9	grammint	grammint	ADV	_	_	_	_	_	tokId=w-141|SpaceAfter=No
+10	,	,	PUNCT	_	_	_	_	_	tokId=w-142
+11	mais	mais	CCONJ	_	_	_	_	_	tokId=w-143
+12	cheul'	ce	ADJ	_	_	_	_	_	tokId=w-144|SpaceAfter=No
+13	sémaine	sémaine	NOUN	_	_	_	_	_	tokId=w-145|SpaceAfter=No
+14	,	,	PUNCT	_	_	_	_	_	tokId=w-146
+15	Fine	Fine	PROPN	_	_	_	_	_	tokId=w-147
+16	a	avoir	VERB	_	_	_	_	_	tokId=w-148
+17	bin	bin	ADV	_	_	_	_	_	tokId=w-149
+18	vu	vir	VERB	_	_	_	_	_	tokId=w-150
+19	qu'	que	SCONJ	_	_	_	_	_	tokId=w-151|SpaceAfter=No
+20	i'	i	PRON	_	_	_	_	_	tokId=w-152|SpaceAfter=No
+21	étôt	ête	VERB	_	_	_	_	_	tokId=w-153
+22	pus	pus	ADV	_	_	_	_	_	tokId=w-154
+23	imbèrné	imbèrner	VERB	_	_	_	_	_	tokId=w-155
+24	qu'	que	SCONJ	_	_	_	_	_	tokId=w-156|SpaceAfter=No
+25	d'	de	ADP	_	_	_	_	_	tokId=w-157|SpaceAfter=No
+26	habitute	habitute	NOUN	_	_	_	_	_	tokId=w-158|SpaceAfter=No
+27	.	.	PUNCT	_	_	_	_	_	tokId=w-159
+
+# sent_id = noel_kop_s-8
+# text = Adon, ... ch'est arrivé toul'même,... ch'est aujourd'hû,... ch'est grèfe !
+1	Adon	adon	ADV	_	_	_	_	_	tokId=w-160|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-161
+3	...	...	PUNCT	_	_	_	_	_	tokId=w-162
+4	ch'	chà	PRON	_	_	_	_	_	tokId=w-163|SpaceAfter=No
+5	est	ête	VERB	_	_	_	_	_	tokId=w-164
+6	arrivé	arriver	VERB	_	_	_	_	_	tokId=w-165
+7	toul'	toul'	ADV	_	_	_	_	_	tokId=w-166|SpaceAfter=No
+8	même	même	ADV	_	_	_	_	_	tokId=w-167|SpaceAfter=No
+9	,	,	PUNCT	_	_	_	_	_	tokId=w-168|SpaceAfter=No
+10	...	...	PUNCT	_	_	_	_	_	tokId=w-169
+11	ch'	chà	PRON	_	_	_	_	_	tokId=w-170|SpaceAfter=No
+12	est	ête	VERB	_	_	_	_	_	tokId=w-171
+13	aujourd'hû	aujourd'hû	ADV	_	_	_	_	_	tokId=w-172|SpaceAfter=No
+14	,	,	PUNCT	_	_	_	_	_	tokId=w-173|SpaceAfter=No
+15	...	...	PUNCT	_	_	_	_	_	tokId=w-174
+16	ch'	chà	PRON	_	_	_	_	_	tokId=w-175|SpaceAfter=No
+17	est	ête	VERB	_	_	_	_	_	tokId=w-176
+18	grèfe	grèfe	NOUN	_	_	_	_	_	tokId=w-177
+19	!	!	PUNCT	_	_	_	_	_	tokId=w-178
+
+# sent_id = noel_kop_s-9
+# text = Fine buzie qu'i n'faudrôt pôs qu'chà dure trop lon.mint.
+1	Fine	Fine	PROPN	_	_	_	_	_	tokId=w-179
+2	buzie	buzier	VERB	_	_	_	_	_	tokId=w-180
+3	qu'	que	SCONJ	_	_	_	_	_	tokId=w-181|SpaceAfter=No
+4	i	i	PRON	_	_	_	_	_	tokId=w-182
+5	n'	ne	PART	_	_	_	_	_	tokId=w-183|SpaceAfter=No
+6	faudrôt	falloir	VERB	_	_	_	_	_	tokId=w-184
+7	pôs	pôs	ADV	_	_	_	_	_	tokId=w-185
+8	qu'	que	SCONJ	_	_	_	_	_	tokId=w-186|SpaceAfter=No
+9	chà	chà	PRON	_	_	_	_	_	tokId=w-187
+10	dure	durer	VERB	_	_	_	_	_	tokId=w-188
+11	trop	trop	ADV	_	_	_	_	_	tokId=w-189
+12	lon.mint	lon.mint	ADV	_	_	_	_	_	tokId=w-190|SpaceAfter=No
+13	.	.	PUNCT	_	_	_	_	_	tokId=w-191
+
+# sent_id = noel_kop_s-10
+# text = Quôqu'ch'est qu'elle va treûver pou donner à minger à s'marmale, adon qu'i n'aura nin d'quinzaine ?
+1	Quôqu'	quôque	PRON	_	_	_	_	_	tokId=w-192|SpaceAfter=No
+2	ch'	ch'	PRON	_	_	_	_	_	tokId=w-193|SpaceAfter=No
+3	est	est	VERB	_	_	_	_	_	tokId=w-194
+4	qu'	que	SCONJ	_	_	_	_	_	tokId=w-195|SpaceAfter=No
+5	elle	i	PRON	_	_	_	_	_	tokId=w-196
+6	va	aller	VERB	_	_	_	_	_	tokId=w-197
+7	treûver	treûver	VERB	_	_	_	_	_	tokId=w-198
+8	pou	pou	ADP	_	_	_	_	_	tokId=w-199
+9	donner	donner	VERB	_	_	_	_	_	tokId=w-200
+10	à	à	ADP	_	_	_	_	_	tokId=w-201
+11	minger	minger	VERB	_	_	_	_	_	tokId=w-202
+12	à	à	ADP	_	_	_	_	_	tokId=w-203
+13	s'	sin	ADJ	_	_	_	_	_	tokId=w-204|SpaceAfter=No
+14	marmale	marmale	NOUN	_	_	_	_	_	tokId=w-205|SpaceAfter=No
+15	,	,	PUNCT	_	_	_	_	_	tokId=w-206
+16	adon	adon	ADV	_	_	_	_	_	tokId=w-207
+17	qu'	que	SCONJ	_	_	_	_	_	tokId=w-208|SpaceAfter=No
+18	i	i	PRON	_	_	_	_	_	tokId=w-209
+19	n'	ne	PART	_	_	_	_	_	tokId=w-210|SpaceAfter=No
+20	aura	avoir	VERB	_	_	_	_	_	tokId=w-211
+21	nin	nin	ADV	_	_	_	_	_	tokId=w-212
+22	d'	de	ADP	_	_	_	_	_	tokId=w-213|SpaceAfter=No
+23	quinzaine	quinzaine	NOUN	_	_	_	_	_	tokId=w-214
+24	?	?	PUNCT	_	_	_	_	_	tokId=w-215
+
+# sent_id = noel_kop_s-11
+# text = Elle tronne aussi que s'n'homme i pourrôt ête foutu à l'cour, ou bin erchevoir in mauvais kôp, dins l'batliache !
+1	Elle	i	PRON	_	_	_	_	_	tokId=w-216
+2	tronne	tronner	VERB	_	_	_	_	_	tokId=w-217
+3	aussi	aussi	ADV	_	_	_	_	_	tokId=w-218
+4	que	que	SCONJ	_	_	_	_	_	tokId=w-219
+5	s'n'	sin	ADJ	_	_	_	_	_	tokId=w-220|SpaceAfter=No
+6	homme	homme	NOUN	_	_	_	_	_	tokId=w-221
+7	i	i	PRON	_	_	_	_	_	tokId=w-222
+8	pourrôt	pouvoir	VERB	_	_	_	_	_	tokId=w-223
+9	ête	ête	VERB	_	_	_	_	_	tokId=w-224
+10	foutu	foutre	VERB	_	_	_	_	_	tokId=w-225
+11	à	à	ADP	_	_	_	_	_	tokId=w-226
+12	l'	le	DET	_	_	_	_	_	tokId=w-227|SpaceAfter=No
+13	cour	cour	NOUN	_	_	_	_	_	tokId=w-228|SpaceAfter=No
+14	,	,	PUNCT	_	_	_	_	_	tokId=w-229
+15	ou	ou	CCONJ	_	_	_	_	_	tokId=w-230
+16	bin	bin	ADV	_	_	_	_	_	tokId=w-231
+17	erchevoir	erchevoir	VERB	_	_	_	_	_	tokId=w-232
+18	in	in	DET	_	_	_	_	_	tokId=w-233
+19	mauvais	mauvais	ADJ	_	_	_	_	_	tokId=w-234
+20	kôp	kôp	NOUN	_	_	_	_	_	tokId=w-235|SpaceAfter=No
+21	,	,	PUNCT	_	_	_	_	_	tokId=w-236
+22	dins	dins	ADP	_	_	_	_	_	tokId=w-237
+23	l'	le	DET	_	_	_	_	_	tokId=w-238|SpaceAfter=No
+24	batliache	batliache	NOUN	_	_	_	_	_	tokId=w-239
+25	!	!	PUNCT	_	_	_	_	_	tokId=w-240
+
+# sent_id = noel_kop_s-12
+# text = D'siré, li, tchand qu'i s'a l'vé, à pids d'écau, i n'a nin fait d'ménoule d'erlavache.
+1	D'siré	Désiré	PROPN	_	_	_	_	_	tokId=w-241|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-242
+3	li	li	PRON	_	_	_	_	_	tokId=w-243|SpaceAfter=No
+4	,	,	PUNCT	_	_	_	_	_	tokId=w-244
+5	tchand	tchand	ADV	_	_	_	_	_	tokId=w-245
+6	qu'	que	SCONJ	_	_	_	_	_	tokId=w-246|SpaceAfter=No
+7	i	i	PRON	_	_	_	_	_	tokId=w-247
+8	s'	se	PRON	_	_	_	_	_	tokId=w-248|SpaceAfter=No
+9	a	avoir	VERB	_	_	_	_	_	tokId=w-249
+10	l'vé	lever	VERB	_	_	_	_	_	tokId=w-250|SpaceAfter=No
+11	,	,	PUNCT	_	_	_	_	_	tokId=w-251
+12	à	à	ADP	_	_	_	_	_	tokId=w-252
+13	pids	pied	NOUN	_	_	_	_	_	tokId=w-253
+14	d'	de	ADP	_	_	_	_	_	tokId=w-254|SpaceAfter=No
+15	écau	écau	NOUN	_	_	_	_	_	tokId=w-255|SpaceAfter=No
+16	,	,	PUNCT	_	_	_	_	_	tokId=w-256
+17	i	i	PRON	_	_	_	_	_	tokId=w-257
+18	n'	ne	PART	_	_	_	_	_	tokId=w-258|SpaceAfter=No
+19	a	avoir	VERB	_	_	_	_	_	tokId=w-259
+20	nin	nin	ADV	_	_	_	_	_	tokId=w-260
+21	fait	faire	VERB	_	_	_	_	_	tokId=w-261
+22	d'	de	ADP	_	_	_	_	_	tokId=w-262|SpaceAfter=No
+23	ménoule	ménoule	NOUN	_	_	_	_	_	tokId=w-263
+24	d'	d'	ADP	_	_	_	_	_	tokId=w-264|SpaceAfter=No
+25	erlavache	erlavache	NOUN	_	_	_	_	_	tokId=w-265|SpaceAfter=No
+26	.	.	PUNCT	_	_	_	_	_	tokId=w-266
+
+# sent_id = noel_kop_s-13
+# text = I'a mis sin sarrau d'ouvrache et s'castchette.
+1	I'	i	PRON	_	_	_	_	_	tokId=w-267|SpaceAfter=No
+2	a	avoir	VERB	_	_	_	_	_	tokId=w-268
+3	mis	mette	VERB	_	_	_	_	_	tokId=w-269
+4	sin	sin	ADJ	_	_	_	_	_	tokId=w-270
+5	sarrau	sarrau	NOUN	_	_	_	_	_	tokId=w-271
+6	d'	de	ADP	_	_	_	_	_	tokId=w-272|SpaceAfter=No
+7	ouvrache	ouvrache	NOUN	_	_	_	_	_	tokId=w-273
+8	et	et	CCONJ	_	_	_	_	_	tokId=w-274
+9	s'	sin	ADJ	_	_	_	_	_	tokId=w-275|SpaceAfter=No
+10	castchette	castchette	NOUN	_	_	_	_	_	tokId=w-276|SpaceAfter=No
+11	.	.	PUNCT	_	_	_	_	_	tokId=w-277
+
+# sent_id = noel_kop_s-14
+# text = Pou nin faire d'brût, i'a foque mis ses galoches à dache passé l'seul de l'porte.
+1	Pou	pou	ADP	_	_	_	_	_	tokId=w-278
+2	nin	nin	ADV	_	_	_	_	_	tokId=w-279
+3	faire	faire	VERB	_	_	_	_	_	tokId=w-280
+4	d'	de	ADP	_	_	_	_	_	tokId=w-281|SpaceAfter=No
+5	brût	brût	NOUN	_	_	_	_	_	tokId=w-282|SpaceAfter=No
+6	,	,	PUNCT	_	_	_	_	_	tokId=w-283
+7	i'	i	PRON	_	_	_	_	_	tokId=w-284|SpaceAfter=No
+8	a	avoir	VERB	_	_	_	_	_	tokId=w-285
+9	foque	foque	ADV	_	_	_	_	_	tokId=w-286
+10	mis	mettre	VERB	_	_	_	_	_	tokId=w-287
+11	ses	sin	ADJ	_	_	_	_	_	tokId=w-288
+12	galoches	galoche	NOUN	_	_	_	_	_	tokId=w-289
+13	à	à	ADP	_	_	_	_	_	tokId=w-290
+14	dache	dache	ADP	_	_	_	_	_	tokId=w-291
+15	passé	passer	VERB	_	_	_	_	_	tokId=w-292
+16	l'	le	DET	_	_	_	_	_	tokId=w-293|SpaceAfter=No
+17	seul	seul	NOUN	_	_	_	_	_	tokId=w-294
+18	de	de	ADP	_	_	_	_	_	tokId=w-295
+19	l'	le	DET	_	_	_	_	_	tokId=w-296|SpaceAfter=No
+20	porte	porte	NOUN	_	_	_	_	_	tokId=w-297|SpaceAfter=No
+21	.	.	PUNCT	_	_	_	_	_	tokId=w-298
+
+# sent_id = noel_kop_s-15
+# text = Déyors, dins l'courée, tous les hommes is ont fait l'même.
+1	Déyors	déyors	ADV	_	_	_	_	_	tokId=w-299|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-300
+3	dins	dins	ADP	_	_	_	_	_	tokId=w-301
+4	l'	le	DET	_	_	_	_	_	tokId=w-302|SpaceAfter=No
+5	courée	courée	NOUN	_	_	_	_	_	tokId=w-303|SpaceAfter=No
+6	,	,	PUNCT	_	_	_	_	_	tokId=w-304
+7	tous	tout	ADJ	_	_	_	_	_	tokId=w-305
+8	les	le	DET	_	_	_	_	_	tokId=w-306
+9	hommes	homme	NOUN	_	_	_	_	_	tokId=w-307
+10	is	i	PRON	_	_	_	_	_	tokId=w-308
+11	ont	avoir	VERB	_	_	_	_	_	tokId=w-309
+12	fait	faire	VERB	_	_	_	_	_	tokId=w-310
+13	l'	le	DET	_	_	_	_	_	tokId=w-311|SpaceAfter=No
+14	même	même	ADJ	_	_	_	_	_	tokId=w-312|SpaceAfter=No
+15	.	.	PUNCT	_	_	_	_	_	tokId=w-313
+
+# sent_id = noel_kop_s-16
+# text = Aujourd'hû, pôs ène parole, mais foque des clins d'oeules et des fidjures décidées.
+1	Aujourd'hû	aujourd'hû	ADV	_	_	_	_	_	tokId=w-314|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-315
+3	pôs	pôs	ADV	_	_	_	_	_	tokId=w-316
+4	ène	in	DET	_	_	_	_	_	tokId=w-317
+5	parole	parole	NOUN	_	_	_	_	_	tokId=w-318|SpaceAfter=No
+6	,	,	PUNCT	_	_	_	_	_	tokId=w-319
+7	mais	mais	CCONJ	_	_	_	_	_	tokId=w-320
+8	foque	foque	ADV	_	_	_	_	_	tokId=w-321
+9	des	in	DET	_	_	_	_	_	tokId=w-322
+10	clins	clin	NOUN	_	_	_	_	_	tokId=w-323
+11	d'	d'	ADP	_	_	_	_	_	tokId=w-324|SpaceAfter=No
+12	oeules	oeul	NOUN	_	_	_	_	_	tokId=w-325
+13	et	et	CCONJ	_	_	_	_	_	tokId=w-326
+14	des	in	DET	_	_	_	_	_	tokId=w-327
+15	fidjures	fidjure	NOUN	_	_	_	_	_	tokId=w-328
+16	décidées	décider	VERB	_	_	_	_	_	tokId=w-329|SpaceAfter=No
+17	.	.	PUNCT	_	_	_	_	_	tokId=w-330
+
+# sent_id = noel_kop_s-17
+# text = Ene fôs dins l'rue, ch'est des sourires et des grandes tapes dins l'dos.
+1	Ene	ene	DET	_	_	_	_	_	tokId=w-331
+2	fôs	fôs	NOUN	_	_	_	_	_	tokId=w-332
+3	dins	dins	ADP	_	_	_	_	_	tokId=w-333
+4	l'	le	DET	_	_	_	_	_	tokId=w-334|SpaceAfter=No
+5	rue	rue	NOUN	_	_	_	_	_	tokId=w-335|SpaceAfter=No
+6	,	,	PUNCT	_	_	_	_	_	tokId=w-336
+7	ch'	chà	PRON	_	_	_	_	_	tokId=w-337|SpaceAfter=No
+8	est	ête	VERB	_	_	_	_	_	tokId=w-338
+9	des	in	DET	_	_	_	_	_	tokId=w-339
+10	sourires	sourire	NOUN	_	_	_	_	_	tokId=w-340
+11	et	et	CCONJ	_	_	_	_	_	tokId=w-341
+12	des	in	DET	_	_	_	_	_	tokId=w-342
+13	grandes	grand	ADJ	_	_	_	_	_	tokId=w-343
+14	tapes	tape	NOUN	_	_	_	_	_	tokId=w-344
+15	dins	dins	ADP	_	_	_	_	_	tokId=w-345
+16	l'	le	DET	_	_	_	_	_	tokId=w-346|SpaceAfter=No
+17	dos	dos	NOUN	_	_	_	_	_	tokId=w-347|SpaceAfter=No
+18	.	.	PUNCT	_	_	_	_	_	tokId=w-348
+
+# sent_id = noel_kop_s-18
+# text = In est tertous bin d'accord : Chà n'peut pus durer !
+1	In	in	PRON	_	_	_	_	_	tokId=w-349
+2	est	ête	VERB	_	_	_	_	_	tokId=w-350
+3	tertous	tertous	ADJ	_	_	_	_	_	tokId=w-351
+4	bin	bin	ADV	_	_	_	_	_	tokId=w-352
+5	d'accord	d'accord	ADV	_	_	_	_	_	tokId=w-353
+6	:	:	PUNCT	_	_	_	_	_	tokId=w-354
+7	Chà	chà	PRON	_	_	_	_	_	tokId=w-355
+8	n'	ne	PART	_	_	_	_	_	tokId=w-356|SpaceAfter=No
+9	peut	pouvoir	VERB	_	_	_	_	_	tokId=w-357
+10	pus	plus	ADV	_	_	_	_	_	tokId=w-358
+11	durer	durer	VERB	_	_	_	_	_	tokId=w-359
+12	!	!	PUNCT	_	_	_	_	_	tokId=w-360
+
+# sent_id = noel_kop_s-19
+# text = In marchant veûte, au mitant du pavé, l'z-ouvris racont.tent tertous leus misères, commint qu'l'ouvrache i'a v'nu : toudis pus veûte, et achteure, acore in sous d'moinsse à l'heure !
+1	In	in	ADV	_	_	_	_	_	tokId=w-361
+2	marchant	marchant	VERB	_	_	_	_	_	tokId=w-362
+3	veûte	veûte	ADV	_	_	_	_	_	tokId=w-363|SpaceAfter=No
+4	,	,	PUNCT	_	_	_	_	_	tokId=w-364
+5	au	au	ADP	_	_	_	_	_	tokId=w-365
+6	mitant	mitant	NOUN	_	_	_	_	_	tokId=w-366
+7	du	du	ADP	_	_	_	_	_	tokId=w-367
+8	pavé	pavé	NOUN	_	_	_	_	_	tokId=w-368|SpaceAfter=No
+9	,	,	PUNCT	_	_	_	_	_	tokId=w-369
+10	l'z	le	DET	_	_	_	_	_	tokId=w-370|SpaceAfter=No
+11	-	-	PUNCT	_	_	_	_	_	tokId=w-371|SpaceAfter=No
+12	ouvris	ouvri	NOUN	_	_	_	_	_	tokId=w-372
+13	racont.tent	raconter	VERB	_	_	_	_	_	tokId=w-373
+14	tertous	tertous	ADJ	_	_	_	_	_	tokId=w-374
+15	leus	leu	ADJ	_	_	_	_	_	tokId=w-375
+16	misères	misère	NOUN	_	_	_	_	_	tokId=w-376|SpaceAfter=No
+17	,	,	PUNCT	_	_	_	_	_	tokId=w-377
+18	commint	commint	ADV	_	_	_	_	_	tokId=w-378
+19	qu'	que	SCONJ	_	_	_	_	_	tokId=w-379|SpaceAfter=No
+20	l'	le	DET	_	_	_	_	_	tokId=w-380|SpaceAfter=No
+21	ouvrache	ouvrache	NOUN	_	_	_	_	_	tokId=w-381
+22	i'	i	PRON	_	_	_	_	_	tokId=w-382|SpaceAfter=No
+23	a	avoir	VERB	_	_	_	_	_	tokId=w-383
+24	v'nu	venir	VERB	_	_	_	_	_	tokId=w-384
+25	:	:	PUNCT	_	_	_	_	_	tokId=w-385
+26	toudis	toudis	ADV	_	_	_	_	_	tokId=w-386
+27	pus	pus	ADV	_	_	_	_	_	tokId=w-387
+28	veûte	veûte	ADJ	_	_	_	_	_	tokId=w-388|SpaceAfter=No
+29	,	,	PUNCT	_	_	_	_	_	tokId=w-389
+30	et	et	CCONJ	_	_	_	_	_	tokId=w-390
+31	achteure	achteure	ADV	_	_	_	_	_	tokId=w-391|SpaceAfter=No
+32	,	,	PUNCT	_	_	_	_	_	tokId=w-392
+33	acore	acore	ADV	_	_	_	_	_	tokId=w-393
+34	in	in	NUM	_	_	_	_	_	tokId=w-394
+35	sous	sous	NOUN	_	_	_	_	_	tokId=w-395
+36	d'	de	ADP	_	_	_	_	_	tokId=w-396|SpaceAfter=No
+37	moinsse	moinsse	ADV	_	_	_	_	_	tokId=w-397
+38	à	à	ADP	_	_	_	_	_	tokId=w-398
+39	l'	le	DET	_	_	_	_	_	tokId=w-399|SpaceAfter=No
+40	heure	heure	NOUN	_	_	_	_	_	tokId=w-400
+41	!	!	PUNCT	_	_	_	_	_	tokId=w-401
+
+# sent_id = noel_kop_s-20
+# text = Li, D'siré, i'est tiss'rand d'pus tchinze ans à mou Vanoutrife – « Klakferlutje », comme in dit à Mouscron.
+1	Li	li	PRON	_	_	_	_	_	tokId=w-402|SpaceAfter=No
+2	,	,	PUNCT	_	_	_	_	_	tokId=w-403
+3	D'siré	Désiré	PROPN	_	_	_	_	_	tokId=w-404|SpaceAfter=No
+4	,	,	PUNCT	_	_	_	_	_	tokId=w-405
+5	i'	i	PRON	_	_	_	_	_	tokId=w-406|SpaceAfter=No
+6	est	ête	VERB	_	_	_	_	_	tokId=w-407
+7	tiss'rand	tiss'rand	NOUN	_	_	_	_	_	tokId=w-408
+8	d'pus	d'pus	ADV	_	_	_	_	_	tokId=w-409
+9	tchinze	tchinze	NUM	_	_	_	_	_	tokId=w-410
+10	ans	an	NOUN	_	_	_	_	_	tokId=w-411
+11	à	à	ADP	_	_	_	_	_	tokId=w-412
+12	mou	mou	PROPN	_	_	_	_	_	tokId=w-413
+13	Vanoutrife	Vanoutrife	PROPN	_	_	_	_	_	tokId=w-414
+14	–	–	PUNCT	_	_	_	_	_	tokId=w-415
+15	«	«	PUNCT	_	_	_	_	_	tokId=w-416
+16	Klakferlutje	Klakferlutje	PROPN	_	_	_	_	_	tokId=w-417
+17	»	»	PUNCT	_	_	_	_	_	tokId=w-418|SpaceAfter=No
+18	,	,	PUNCT	_	_	_	_	_	tokId=w-419
+19	comme	comme	SCONJ	_	_	_	_	_	tokId=w-420
+20	in	in	PRON	_	_	_	_	_	tokId=w-421
+21	dit	dire	VERB	_	_	_	_	_	tokId=w-422
+22	à	à	ADP	_	_	_	_	_	tokId=w-423
+23	Mouscron	Mouscron	PROPN	_	_	_	_	_	tokId=w-424|SpaceAfter=No
+24	.	.	PUNCT	_	_	_	_	_	tokId=w-425
+
+# sent_id = noel_kop_s-21
+# text = I n'd'a pôs deux comme li pou faire tourner sin méti Jacquard, mais l'contremaîte i li a dit : « Faut puque d'tapis ! ».
+1	I	i	PRON	_	_	_	_	_	tokId=w-426
+2	n'	ne	PART	_	_	_	_	_	tokId=w-427|SpaceAfter=No
+3	d'	d'	PRON	_	_	_	_	_	tokId=w-428|SpaceAfter=No
+4	a	avoir	VERB	_	_	_	_	_	tokId=w-429
+5	pôs	pôs	ADV	_	_	_	_	_	tokId=w-430
+6	deux	deux	NUM	_	_	_	_	_	tokId=w-431
+7	comme	comme	SCONJ	_	_	_	_	_	tokId=w-432
+8	li	li	PRON	_	_	_	_	_	tokId=w-433
+9	pou	pou	ADP	_	_	_	_	_	tokId=w-434
+10	faire	faire	VERB	_	_	_	_	_	tokId=w-435
+11	tourner	tourner	VERB	_	_	_	_	_	tokId=w-436
+12	sin	sin	ADJ	_	_	_	_	_	tokId=w-437
+13	méti	méti	NOUN	_	_	_	_	_	tokId=w-438
+14	Jacquard	Jacquard	PROPN	_	_	_	_	_	tokId=w-439|SpaceAfter=No
+15	,	,	PUNCT	_	_	_	_	_	tokId=w-440
+16	mais	mais	CCONJ	_	_	_	_	_	tokId=w-441
+17	l'	le	DET	_	_	_	_	_	tokId=w-442|SpaceAfter=No
+18	contremaîte	contremaîte	NOUN	_	_	_	_	_	tokId=w-443
+19	i	i	PRON	_	_	_	_	_	tokId=w-444
+20	li	li	PRON	_	_	_	_	_	tokId=w-445
+21	a	avoir	VERB	_	_	_	_	_	tokId=w-446
+22	dit	dire	VERB	_	_	_	_	_	tokId=w-447
+23	:	:	PUNCT	_	_	_	_	_	tokId=w-448
+24	«	«	PUNCT	_	_	_	_	_	tokId=w-449
+25	Faut	falloir	VERB	_	_	_	_	_	tokId=w-450
+26	puque	puque	ADV	_	_	_	_	_	tokId=w-451
+27	d'	de	ADP	_	_	_	_	_	tokId=w-452|SpaceAfter=No
+28	tapis	tapis	NOUN	_	_	_	_	_	tokId=w-453
+29	!	!	PUNCT	_	_	_	_	_	tokId=w-454
+30	»	»	PUNCT	_	_	_	_	_	tokId=w-455|SpaceAfter=No
+31	.	.	PUNCT	_	_	_	_	_	tokId=w-456
+
+# sent_id = noel_kop_s-22
+# text = I n'in peut toul'même rin, li, D'siré, si qu'les fils de l'chaîne is casst.tent et qu'is pandoult.tent, pasque l'ôtil va trop veûte !
+1	I	i	PRON	_	_	_	_	_	tokId=w-457
+2	n'	ne	PART	_	_	_	_	_	tokId=w-458|SpaceAfter=No
+3	in	in	PRON	_	_	_	_	_	tokId=w-459
+4	peut	pouvoir	VERB	_	_	_	_	_	tokId=w-460
+5	toul'	toul'	ADV	_	_	_	_	_	tokId=w-461|SpaceAfter=No
+6	même	même	ADV	_	_	_	_	_	tokId=w-462
+7	rin	rin	ADV	_	_	_	_	_	tokId=w-463|SpaceAfter=No
+8	,	,	PUNCT	_	_	_	_	_	tokId=w-464
+9	li	li	PRON	_	_	_	_	_	tokId=w-465|SpaceAfter=No
+10	,	,	PUNCT	_	_	_	_	_	tokId=w-466
+11	D'siré	Désiré	PROPN	_	_	_	_	_	tokId=w-467|SpaceAfter=No
+12	,	,	PUNCT	_	_	_	_	_	tokId=w-468
+13	si	si	SCONJ	_	_	_	_	_	tokId=w-469
+14	qu'	que	SCONJ	_	_	_	_	_	tokId=w-470|SpaceAfter=No
+15	les	le	DET	_	_	_	_	_	tokId=w-471
+16	fils	fil	NOUN	_	_	_	_	_	tokId=w-472
+17	de	de	ADP	_	_	_	_	_	tokId=w-473
+18	l'	le	DET	_	_	_	_	_	tokId=w-474|SpaceAfter=No
+19	chaîne	chaîne	NOUN	_	_	_	_	_	tokId=w-475
+20	is	i	PRON	_	_	_	_	_	tokId=w-476
+21	casst.tent	casser	VERB	_	_	_	_	_	tokId=w-477
+22	et	et	CCONJ	_	_	_	_	_	tokId=w-478
+23	qu'	que	SCONJ	_	_	_	_	_	tokId=w-479|SpaceAfter=No
+24	is	i	PRON	_	_	_	_	_	tokId=w-480
+25	pandoult.tent	pandoulter	VERB	_	_	_	_	_	tokId=w-481|SpaceAfter=No
+26	,	,	PUNCT	_	_	_	_	_	tokId=w-482
+27	pasque	pasque	SCONJ	_	_	_	_	_	tokId=w-483
+28	l'	le	DET	_	_	_	_	_	tokId=w-484|SpaceAfter=No
+29	ôtil	ôtil	NOUN	_	_	_	_	_	tokId=w-485
+30	va	aller	VERB	_	_	_	_	_	tokId=w-486
+31	trop	trop	ADV	_	_	_	_	_	tokId=w-487
+32	veûte	veûte	ADV	_	_	_	_	_	tokId=w-488
+33	!	!	PUNCT	_	_	_	_	_	tokId=w-489
+
+# sent_id = noel_kop_s-23
+# text = Chaque fôs qu'is passt.tent pa-d'vant l'intrée d'ène aute courée, d'z-autes ouvris vènt.tent in puque.
+1	Chaque	chaque	ADJ	_	_	_	_	_	tokId=w-490
+2	fôs	fôs	NOUN	_	_	_	_	_	tokId=w-491
+3	qu'	que	SCONJ	_	_	_	_	_	tokId=w-492|SpaceAfter=No
+4	is	i	PRON	_	_	_	_	_	tokId=w-493
+5	passt.tent	passer	VERB	_	_	_	_	_	tokId=w-494
+6	pa-d'vant	pa-d'vant	ADP	_	_	_	_	_	tokId=w-495
+7	l'	le	DET	_	_	_	_	_	tokId=w-496|SpaceAfter=No
+8	intrée	intrée	NOUN	_	_	_	_	_	tokId=w-497
+9	d'	de	ADP	_	_	_	_	_	tokId=w-498|SpaceAfter=No
+10	ène	in	DET	_	_	_	_	_	tokId=w-499
+11	aute	aute	ADJ	_	_	_	_	_	tokId=w-500
+12	courée	courée	NOUN	_	_	_	_	_	tokId=w-501|SpaceAfter=No
+13	,	,	PUNCT	_	_	_	_	_	tokId=w-502
+14	d'z	in	DET	_	_	_	_	_	tokId=w-503|SpaceAfter=No
+15	-	-	PUNCT	_	_	_	_	_	tokId=w-504|SpaceAfter=No
+16	autes	aute	ADJ	_	_	_	_	_	tokId=w-505
+17	ouvris	ouvri	NOUN	_	_	_	_	_	tokId=w-506
+18	vènt.tent	venir	VERB	_	_	_	_	_	tokId=w-507
+19	in	in	ADP	_	_	_	_	_	tokId=w-508
+20	puque	puque	ADV	_	_	_	_	_	tokId=w-509|SpaceAfter=No
+21	.	.	PUNCT	_	_	_	_	_	tokId=w-510
+
+# sent_id = noel_kop_s-24
+# text = L'groupe grossis toudis, et in parle fort,... in patôs, bin seûr !
+1	L'	le	DET	_	_	_	_	_	tokId=w-511|SpaceAfter=No
+2	groupe	groupe	NOUN	_	_	_	_	_	tokId=w-512
+3	grossis	grossir	VERB	_	_	_	_	_	tokId=w-513
+4	toudis	toudis	ADV	_	_	_	_	_	tokId=w-514|SpaceAfter=No
+5	,	,	PUNCT	_	_	_	_	_	tokId=w-515
+6	et	et	CCONJ	_	_	_	_	_	tokId=w-516
+7	in	in	PRON	_	_	_	_	_	tokId=w-517
+8	parle	parler	VERB	_	_	_	_	_	tokId=w-518
+9	fort	fort	ADV	_	_	_	_	_	tokId=w-519|SpaceAfter=No
+10	,	,	PUNCT	_	_	_	_	_	tokId=w-520|SpaceAfter=No
+11	...	...	PUNCT	_	_	_	_	_	tokId=w-521
+12	in	in	ADP	_	_	_	_	_	tokId=w-522
+13	patôs	patôs	NOUN	_	_	_	_	_	tokId=w-523|SpaceAfter=No
+14	,	,	PUNCT	_	_	_	_	_	tokId=w-524
+15	bin	bin	ADV	_	_	_	_	_	tokId=w-525
+16	seûr	seûr	ADJ	_	_	_	_	_	tokId=w-526
+17	!	!	PUNCT	_	_	_	_	_	tokId=w-527
+
+# sent_id = noel_kop_s-25
+# text = I faut bin djeuler pou s'intinde au mitant du brût des galoches su'l'pavé.
+1	I	i	PRON	_	_	_	_	_	tokId=w-528
+2	faut	falloir	VERB	_	_	_	_	_	tokId=w-529
+3	bin	bin	ADV	_	_	_	_	_	tokId=w-530
+4	djeuler	djeuler	VERB	_	_	_	_	_	tokId=w-531
+5	pou	pou	ADP	_	_	_	_	_	tokId=w-532
+6	s'	se	PRON	_	_	_	_	_	tokId=w-533|SpaceAfter=No
+7	intinde	intinde	VERB	_	_	_	_	_	tokId=w-534
+8	au	au	ADP	_	_	_	_	_	tokId=w-535
+9	mitant	mitant	NOUN	_	_	_	_	_	tokId=w-536
+10	du	du	ADP	_	_	_	_	_	tokId=w-537
+11	brût	brût	NOUN	_	_	_	_	_	tokId=w-538
+12	des	de	ADP	_	_	_	_	_	tokId=w-539
+13	galoches	galoche	NOUN	_	_	_	_	_	tokId=w-540
+14	su'	sur	ADP	_	_	_	_	_	tokId=w-541|SpaceAfter=No
+15	l'	le	DET	_	_	_	_	_	tokId=w-542|SpaceAfter=No
+16	pavé	pavé	NOUN	_	_	_	_	_	tokId=w-543|SpaceAfter=No
+17	.	.	PUNCT	_	_	_	_	_	tokId=w-544
+
+# sent_id = noel_kop_s-26
+# text = Les peûgns erlevés, in intind : « A l'grand'plache... A l'grand'plache...!!! ».
+1	Les	le	DET	_	_	_	_	_	tokId=w-545
+2	peûgns	peûgn	NOUN	_	_	_	_	_	tokId=w-546
+3	erlevés	erlever	VERB	_	_	_	_	_	tokId=w-547|SpaceAfter=No
+4	,	,	PUNCT	_	_	_	_	_	tokId=w-548
+5	in	in	PRON	_	_	_	_	_	tokId=w-549
+6	intind	intinde	VERB	_	_	_	_	_	tokId=w-550
+7	:	:	PUNCT	_	_	_	_	_	tokId=w-551
+8	«	«	PUNCT	_	_	_	_	_	tokId=w-552
+9	A	à	ADP	_	_	_	_	_	tokId=w-553
+10	l'	le	DET	_	_	_	_	_	tokId=w-554|SpaceAfter=No
+11	grand'plache	grand'plache	NOUN	_	_	_	_	_	tokId=w-555|SpaceAfter=No
+12	...	...	PUNCT	_	_	_	_	_	tokId=w-556
+13	A	à	ADP	_	_	_	_	_	tokId=w-557
+14	l'	le	DET	_	_	_	_	_	tokId=w-558|SpaceAfter=No
+15	grand'plache	grand'plache	NOUN	_	_	_	_	_	tokId=w-559|SpaceAfter=No
+16	...	...	PUNCT	_	_	_	_	_	tokId=w-560|SpaceAfter=No
+17	!!!	!!!	PUNCT	_	_	_	_	_	tokId=w-561
+18	»	»	PUNCT	_	_	_	_	_	tokId=w-562|SpaceAfter=No
+19	.	.	PUNCT	_	_	_	_	_	tokId=w-563
+
+# sent_id = noel_kop_s-27
+# text = I'a d'z-ouvris d'tous les coins : i'a là des tapisseûs, des tireûs, des fileûx, des tinturiers, des ourdicheûs, des bacleûs,...
+1	I'	i	PRON	_	_	_	_	_	tokId=w-564|SpaceAfter=No
+2	a	avoir	VERB	_	_	_	_	_	tokId=w-565
+3	d'z	in	DET	_	_	_	_	_	tokId=w-566|SpaceAfter=No
+4	-	-	PUNCT	_	_	_	_	_	tokId=w-567|SpaceAfter=No
+5	ouvris	ouvri	NOUN	_	_	_	_	_	tokId=w-568
+6	d'	de	ADP	_	_	_	_	_	tokId=w-569|SpaceAfter=No
+7	tous	tout	ADJ	_	_	_	_	_	tokId=w-570
+8	les	le	DET	_	_	_	_	_	tokId=w-571
+9	coins	coin	NOUN	_	_	_	_	_	tokId=w-572
+10	:	:	PUNCT	_	_	_	_	_	tokId=w-573
+11	i'	i	PRON	_	_	_	_	_	tokId=w-574|SpaceAfter=No
+12	a	avoir	VERB	_	_	_	_	_	tokId=w-575
+13	là	là	ADV	_	_	_	_	_	tokId=w-576
+14	des	in	DET	_	_	_	_	_	tokId=w-577
+15	tapisseûs	tapisseû	NOUN	_	_	_	_	_	tokId=w-578|SpaceAfter=No
+16	,	,	PUNCT	_	_	_	_	_	tokId=w-579
+17	des	in	DET	_	_	_	_	_	tokId=w-580
+18	tireûs	tireû	NOUN	_	_	_	_	_	tokId=w-581|SpaceAfter=No
+19	,	,	PUNCT	_	_	_	_	_	tokId=w-582
+20	des	in	DET	_	_	_	_	_	tokId=w-583
+21	fileûx	fileû	NOUN	_	_	_	_	_	tokId=w-584|SpaceAfter=No
+22	,	,	PUNCT	_	_	_	_	_	tokId=w-585
+23	des	in	DET	_	_	_	_	_	tokId=w-586
+24	tinturiers	tinturier	NOUN	_	_	_	_	_	tokId=w-587|SpaceAfter=No
+25	,	,	PUNCT	_	_	_	_	_	tokId=w-588
+26	des	in	DET	_	_	_	_	_	tokId=w-589
+27	ourdicheûs	ourdicheû	NOUN	_	_	_	_	_	tokId=w-590|SpaceAfter=No
+28	,	,	PUNCT	_	_	_	_	_	tokId=w-591
+29	des	in	DET	_	_	_	_	_	tokId=w-592
+30	bacleûs	bacleû	NOUN	_	_	_	_	_	tokId=w-593|SpaceAfter=No
+31	,	,	PUNCT	_	_	_	_	_	tokId=w-594|SpaceAfter=No
+32	...	…	PUNCT	_	_	_	_	_	tokId=w-595
+
+# sent_id = noel_kop_s-28
+# text = Pour seûr, i'n'dôt pus avoir grammint d'fabriques édoù qu'in oeufe, aujourd'hû !
+1	Pour	pour	ADP	_	_	_	_	_	tokId=w-596
+2	seûr	seûr	ADJ	_	_	_	_	_	tokId=w-597|SpaceAfter=No
+3	,	,	PUNCT	_	_	_	_	_	tokId=w-598
+4	i'	i	PRON	_	_	_	_	_	tokId=w-599|SpaceAfter=No
+5	n'	ne	PART	_	_	_	_	_	tokId=w-600|SpaceAfter=No
+6	dôt	devoir	VERB	_	_	_	_	_	tokId=w-601
+7	pus	pus	ADV	_	_	_	_	_	tokId=w-602
+8	avoir	avoir	VERB	_	_	_	_	_	tokId=w-603
+9	grammint	grammint	ADV	_	_	_	_	_	tokId=w-604
+10	d'	de	DET	_	_	_	_	_	tokId=w-605|SpaceAfter=No
+11	fabriques	fabrique	NOUN	_	_	_	_	_	tokId=w-606
+12	édoù	édoù	ADV	_	_	_	_	_	tokId=w-607
+13	qu'	que	ADV	_	_	_	_	_	tokId=w-608|SpaceAfter=No
+14	in	in	PRON	_	_	_	_	_	tokId=w-609
+15	oeufe	oeufrer	VERB	_	_	_	_	_	tokId=w-610|SpaceAfter=No
+16	,	,	PUNCT	_	_	_	_	_	tokId=w-611
+17	aujourd'hû	aujourd'hû	ADV	_	_	_	_	_	tokId=w-612
+18	!	!	PUNCT	_	_	_	_	_	tokId=w-613
+
+# sent_id = noel_kop_s-29
+# text = A leus cassis, les fin.mes erwet.tent tout c'dallage bin fires d'leus'hommes, mais aussi, avec l'troule de cheu qui va arriver !
+1	A	à	ADP	_	_	_	_	_	tokId=w-614
+2	leus	leu	ADJ	_	_	_	_	_	tokId=w-615
+3	cassis	cassis	NOUN	_	_	_	_	_	tokId=w-616|SpaceAfter=No
+4	,	,	PUNCT	_	_	_	_	_	tokId=w-617
+5	les	le	DET	_	_	_	_	_	tokId=w-618
+6	fin.mes	fin.me	NOUN	_	_	_	_	_	tokId=w-619
+7	erwet.tent	erwettier	VERB	_	_	_	_	_	tokId=w-620
+8	tout	tout	ADJ	_	_	_	_	_	tokId=w-621
+9	c'	ce	PRON	_	_	_	_	_	tokId=w-622|SpaceAfter=No
+10	dallage	dallage	NOUN	_	_	_	_	_	tokId=w-623
+11	bin	bin	ADV	_	_	_	_	_	tokId=w-624
+12	fires	fire	ADJ	_	_	_	_	_	tokId=w-625
+13	d'	de	ADP	_	_	_	_	_	tokId=w-626|SpaceAfter=No
+14	leus'	leu	ADJ	_	_	_	_	_	tokId=w-627|SpaceAfter=No
+15	hommes	homme	NOUN	_	_	_	_	_	tokId=w-628|SpaceAfter=No
+16	,	,	PUNCT	_	_	_	_	_	tokId=w-629
+17	mais	mais	CCONJ	_	_	_	_	_	tokId=w-630
+18	aussi	aussi	ADV	_	_	_	_	_	tokId=w-631|SpaceAfter=No
+19	,	,	PUNCT	_	_	_	_	_	tokId=w-632
+20	avec	avec	ADP	_	_	_	_	_	tokId=w-633
+21	l'	le	DET	_	_	_	_	_	tokId=w-634|SpaceAfter=No
+22	troule	troule	NOUN	_	_	_	_	_	tokId=w-635
+23	de	de	ADP	_	_	_	_	_	tokId=w-636
+24	cheu	cheu	PRON	_	_	_	_	_	tokId=w-637
+25	qui	qui	PRON	_	_	_	_	_	tokId=w-638
+26	va	aller	VERB	_	_	_	_	_	tokId=w-639
+27	arriver	arriver	VERB	_	_	_	_	_	tokId=w-640
+28	!	!	PUNCT	_	_	_	_	_	tokId=w-641
+

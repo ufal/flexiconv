@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flexiconv"
+version = "0.1.0"
+description = "Flexible corpus and document converter with a TEI/TEITOK-compatible pivot format."
+authors = [
+  { name = "Maarten Janssen" }
+]
+requires-python = ">=3.9"
+dependencies = [
+  "lxml>=4.9",
+]
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+
+[project.optional-dependencies]
+rtf = [
+  "striprtf>=0.0.26",
+]
+docx = [
+  "python-docx>=1.0",
+]
+md = [
+  "markdown>=3.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/maartenjanssen/flexiconv"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["flexiconv", "flexiconv.core", "flexiconv.io"]
+
+[project.scripts]
+flexiconv = "flexiconv.cli:main"
+
+

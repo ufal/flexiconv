@@ -1,0 +1,8 @@
+\tx the cat sat on the mat
+\mb the cat sat on the mat
+\ge DET N V P DET N
+\lang en
+
+\tx hello world
+\mb hello world
+\lang en

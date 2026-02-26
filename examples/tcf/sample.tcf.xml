@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<D-Spin xmlns="http://www.dspin.de/data">
+  <TextCorpus>
+    <tokens>
+      <token ID="t_0">The</token>
+      <token ID="t_1">cat</token>
+      <token ID="t_2">sat</token>
+      <token ID="t_3">on</token>
+      <token ID="t_4">the</token>
+      <token ID="t_5">mat</token>
+    </tokens>
+    <sentences>
+      <sentence ID="s_0" tokenIDs="t_0 t_1 t_2 t_3 t_4 t_5"/>
+    </sentences>
+    <lemmas>
+      <lemma tokenIDs="t_0">the</lemma>
+      <lemma tokenIDs="t_1">cat</lemma>
+      <lemma tokenIDs="t_2">sit</lemma>
+      <lemma tokenIDs="t_3">on</lemma>
+      <lemma tokenIDs="t_4">the</lemma>
+      <lemma tokenIDs="t_5">mat</lemma>
+    </lemmas>
+    <POStags>
+      <tag tokenIDs="t_0">DT</tag>
+      <tag tokenIDs="t_1">NN</tag>
+      <tag tokenIDs="t_2">VBD</tag>
+      <tag tokenIDs="t_3">IN</tag>
+      <tag tokenIDs="t_4">DT</tag>
+      <tag tokenIDs="t_5">NN</tag>
+    </POStags>
+  </TextCorpus>
+</D-Spin>

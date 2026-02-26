@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FoLiA xmlns="http://ilk.uvt.nl/folia" version="2.0">
+  <metadata>
+    <meta id="title">Sample FoLiA</meta>
+    <meta id="language" class="eng">en</meta>
+  </metadata>
+  <text id="sample">
+    <lang class="eng"/>
+    <body>
+      <div>
+        <s id="s1" pdtid="s-1">
+          <w xml:id="w1" space="yes">
+            <t class="current">The</t>
+            <lemma class="the"/>
+            <pos class="DT" set="https://penn.upenn.edu/penn-treebank/"/>
+          </w>
+          <w xml:id="w2" space="yes">
+            <t class="current">cat</t>
+            <lemma class="cat"/>
+            <pos class="NN" set="https://penn.upenn.edu/penn-treebank/"/>
+          </w>
+          <w xml:id="w3" space="yes">
+            <t class="current">sat</t>
+            <lemma class="sit"/>
+            <pos class="VBD" set="https://penn.upenn.edu/penn-treebank/"/>
+          </w>
+          <w xml:id="w4" space="no">
+            <t class="current">.</t>
+          </w>
+        </s>
+      </div>
+    </body>
+  </text>
+</FoLiA>

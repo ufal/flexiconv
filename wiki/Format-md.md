@@ -1,0 +1,27 @@
+# Markdown (`md`)
+
+## Origin and purpose
+
+- **Origin**: Markdown text files (`.md`, `.markdown`).
+- **Role in Flexiconv**: import Markdown and normalise it via HTML into structural TEI (paragraphs, headings, lists).
+
+Handled by `flexiconv/io/md.py`.
+
+## Minimal example
+
+```markdown
+# Title
+
+This is a paragraph with *emphasis* and **strong** text.
+```
+
+## Conversion semantics
+
+- **Reading (`md` input)**:
+  - Markdown is converted to HTML, then passed through the HTML importer.
+  - Headings, paragraphs, lists, and code blocks become `structure` nodes and TEI block elements.
+  - Text is tokenised into `<tok>` and sentences, suitable for downstream processing.
+
+- **Writing (`md` output)**:
+  - Not a primary output format; use `txt`, `html`, or `tei` / `teitok` for exporting.
+
