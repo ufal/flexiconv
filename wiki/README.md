@@ -11,3 +11,5 @@ Full user documentation lives in this `wiki/` folder as Markdown files. Use this
 
 Start with [Home](Home.md) for the full overview, or jump directly to [Formats](Formats.md) to see what Flexiconv can read and write.
 
+**Example files.** The repository’s [`examples/`](../examples/) folder contains sample files for many of the supported formats. These are typically taken from real corpus or tool outputs and can be used to try conversions (e.g. `flexiconv examples/trs/sample.trs out.xml`).
+

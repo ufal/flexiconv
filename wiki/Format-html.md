@@ -1,5 +1,10 @@
 # HTML (`html`)
 
+## Format
+
+- **Full format name**: HTML (HyperText Markup Language); W3C standard.
+- **Format specification**: [HTML Living Standard](https://html.spec.whatwg.org/) (WHATWG) / [W3C HTML](https://www.w3.org/TR/html52/). Flexiconv parses HTML to extract structure and text for TEITOK TEI.
+
 ## Origin and purpose
 
 - **Origin**: HTML / XHTML documents from the web or other sources.

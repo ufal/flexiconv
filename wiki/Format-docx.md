@@ -1,5 +1,11 @@
 # Word DOCX (`docx`)
 
+## Tool and format
+
+- **Tool**: Microsoft Word (and compatible applications).
+- **Full format name**: Office Open XML WordprocessingML (DOCX); ZIP package of XML parts.
+- **Format specification**: [ECMA-376](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/) / ISO/IEC 29500; file extension `.docx`.
+
 ## Origin and purpose
 
 - **Origin**: Microsoft Word’s OOXML-based `.docx` format.

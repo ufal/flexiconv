@@ -1,5 +1,10 @@
 # RTF (`rtf`)
 
+## Format
+
+- **Full format name**: Rich Text Format (RTF); document format used by many word processors.
+- **Format specification**: [RTF 1.9 specification](https://www.microsoft.com/en-us/download/details.aspx?id=10725) (Microsoft); binary/text hybrid with control words. Flexiconv extracts plain text for conversion.
+
 ## Origin and purpose
 
 - **Origin**: Rich Text Format (RTF), a document format used by many word processors.

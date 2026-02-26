@@ -15,6 +15,7 @@ from . import (
     save_rtf,
     save_tei_p5,
     save_teitok,
+    __version__,
 )
 from .registry import InputFormat, OutputFormat, registry
 from .mime import describe_unsupported_mime, detect_mime, mime_to_format, path_to_input_format, path_to_output_format
@@ -1032,6 +1033,11 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if argv is None:
         argv = sys.argv[1:]
+
+    # Global --version / -V
+    if "--version" in argv or "-V" in argv:
+        print(__version__)
+        return 0
 
     # Global --list-formats shortcut, mirroring flexipipe-style UX
     if "--list-formats" in argv and not any(

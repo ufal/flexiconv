@@ -1,5 +1,10 @@
 # Markdown (`md`)
 
+## Format
+
+- **Full format name**: Markdown; lightweight markup in plain text. Multiple dialects (CommonMark, GitHub Flavored Markdown, etc.).
+- **Format specification**: [CommonMark](https://commonmark.org/); [GitHub Flavored Markdown](https://github.github.com/gfm/). Flexiconv converts Markdown via HTML into structural TEI.
+
 ## Origin and purpose
 
 - **Origin**: Markdown text files (`.md`, `.markdown`).

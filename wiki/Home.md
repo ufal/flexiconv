@@ -59,3 +59,4 @@ flexiconv -R -f vert corpora/vrt corpora/xml -t teitok
 
 See [Formats](Formats.md) for an overview of all supported formats and links to per-format pages.
 
+**Example files.** The repository’s [`examples/`](../examples/) folder contains sample files for many supported formats (e.g. `examples/trs/sample.trs`, `examples/vert/desam-v20.vert`), typically taken from real corpus projects. Use them to try conversions without your own data.

@@ -1,5 +1,9 @@
 # Plain text (`txt`)
 
+## Format
+
+- **Format**: Plain UTF-8 text; no single specification. Flexiconv uses line breaks and optional punctuation heuristics for sentence segmentation.
+
 ## Origin and purpose
 
 - **Origin**: UTF-8 plain text files (`.txt`).

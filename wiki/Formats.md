@@ -2,11 +2,14 @@
 
 This page lists all formats currently supported by Flexiconv, grouped by data type. Each format has its own short page with:
 
-- Where the format comes from
-- A minimal example
-- How Flexiconv maps it to the pivot model and/or TEITOK TEI
+- The **tool** the format comes from (with link) and the **full format name**
+- A link to the **format specification** or documentation where available
+- A minimal **example**
+- How Flexiconv **maps** it to the pivot model and/or TEITOK TEI
 
 Use `flexiconv info formats` for the authoritative, runtime view.
+
+**Example files.** The [`examples/`](../examples/) folder in the repository contains sample files for many of these formats, drawn from real corpus projects. You can use them to try conversions, e.g. `flexiconv examples/vert/desam-v20.vert out.xml` or `flexiconv examples/trs/sample.trs out.xml`.
 
 ## TEI / TEITOK
 

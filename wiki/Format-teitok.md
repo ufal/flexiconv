@@ -1,5 +1,11 @@
 # TEITOK TEI (`teitok`)
 
+## Tool and format
+
+- **Tool**: [TEITOK](https://teitok.ufal.cz/) corpus platform (formerly TEI-TOKENISE).
+- **Full format name**: TEITOK-style TEI (TEI P5 with TEITOK conventions: `<tok>`, `<dtok>`, `<s>`, `<u>`, rich token attributes, optional stand-off).
+- **Format specification**: TEITOK project documentation and [TEI P5](https://tei-c.org/release/doc/tei-p5-doc/en/html/); TEITOK-specific elements and attributes are documented in the TEITOK manual and `teitok-tools` scripts.
+
 ## Origin and purpose
 
 - **Origin**: TEITOK corpus platform.

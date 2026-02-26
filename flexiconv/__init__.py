@@ -7,6 +7,15 @@ Public API is still experimental. The core concepts are:
 - flexiconv.io.*: format-specific importers/exporters
 """
 
+def __get_version() -> str:
+    try:
+        from importlib.metadata import version
+        return version("flexiconv")
+    except Exception:
+        return "0.1.0"
+
+__version__ = __get_version()
+
 from .core.model import Document, Layer, Node, Span, Edge, Anchor, AnchorType
 from . import registry
 from .io.teitok_xml import load_teitok, save_teitok
