@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
+import shlex
 import sys
 import subprocess
 import unicodedata
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from . import (
     load_rtf,
@@ -442,29 +444,52 @@ def _cmd_info(argv: list[str]) -> int:
         nargs="?",
         help="Format name for 'format' (e.g. teitok, tei, rtf).",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output in JSON (for TEITOK / scripts).",
+    )
     args = parser.parse_args(argv)
 
+    def _format_to_json(fmt: InputFormat | OutputFormat, dtype: str) -> Dict[str, Any]:
+        out: Dict[str, Any] = {
+            "name": fmt.name,
+            "aliases": list(fmt.aliases),
+            "data_type": dtype,
+            "description": fmt.description or "",
+        }
+        if isinstance(fmt, OutputFormat) and getattr(fmt, "supported_layers", ()):
+            out["supported_layers"] = list(fmt.supported_layers)
+        return out
+
     if args.what == "formats":
-        print("Input formats:")
-        seen = set()
+        input_list: List[Dict[str, Any]] = []
+        seen_in = set()
         for key, fmt in registry._inputs.items():  # type: ignore[attr-defined]
-            if fmt.name in seen:
+            if fmt.name in seen_in:
                 continue
-            seen.add(fmt.name)
-            aliases = ", ".join(fmt.aliases) if fmt.aliases else "-"
-            dtype = _format_data_type(fmt.name)
-            desc = f" – {fmt.description}" if fmt.description else ""
-            print(f"  {fmt.name} (aliases: {aliases}; type: {dtype}){desc}")
-        print("\nOutput formats:")
-        seen.clear()
+            seen_in.add(fmt.name)
+            input_list.append(_format_to_json(fmt, _format_data_type(fmt.name)))
+        output_list: List[Dict[str, Any]] = []
+        seen_out = set()
         for key, fmt in registry._outputs.items():  # type: ignore[attr-defined]
-            if fmt.name in seen:
+            if fmt.name in seen_out:
                 continue
-            seen.add(fmt.name)
-            aliases = ", ".join(fmt.aliases) if fmt.aliases else "-"
-            dtype = _format_data_type(fmt.name)
-            desc = f" – {fmt.description}" if fmt.description else ""
-            print(f"  {fmt.name} (aliases: {aliases}; type: {dtype}){desc}")
+            seen_out.add(fmt.name)
+            output_list.append(_format_to_json(fmt, _format_data_type(fmt.name)))
+        if args.json:
+            print(json.dumps({"input": input_list, "output": output_list}, indent=2))
+            return 0
+        print("Input formats:")
+        for fmt in input_list:
+            aliases = ", ".join(fmt["aliases"]) if fmt["aliases"] else "-"
+            desc = f" – {fmt['description']}" if fmt.get("description") else ""
+            print(f"  {fmt['name']} (aliases: {aliases}; type: {fmt['data_type']}){desc}")
+        print("\nOutput formats:")
+        for fmt in output_list:
+            aliases = ", ".join(fmt["aliases"]) if fmt["aliases"] else "-"
+            desc = f" – {fmt['description']}" if fmt.get("description") else ""
+            print(f"  {fmt['name']} (aliases: {aliases}; type: {fmt['data_type']}){desc}")
         return 0
 
     if args.what == "format":
@@ -475,6 +500,13 @@ def _cmd_info(argv: list[str]) -> int:
         fmt_out = registry.get_output(name)
         if not fmt_in and not fmt_out:
             parser.error(f"Unknown format: {name}")
+        if args.json:
+            payload: Dict[str, Any] = {
+                "input": _format_to_json(fmt_in, _format_data_type(fmt_in.name)) if fmt_in else None,
+                "output": _format_to_json(fmt_out, _format_data_type(fmt_out.name)) if fmt_out else None,
+            }
+            print(json.dumps(payload, indent=2))
+            return 0
         if fmt_in:
             aliases = ", ".join(fmt_in.aliases) if fmt_in.aliases else "-"
             print(f"Input format '{fmt_in.name}'")
@@ -608,6 +640,17 @@ def _make_convert_parser(prog: str = "flexiconv convert") -> argparse.ArgumentPa
         help="EAF: interpret tiers using a style preset (e.g. 'doreco' for DoReCo conventions).",
     )
     p.add_argument(
+        "--flexipipe",
+        nargs="?",
+        const="",
+        metavar="ARGS",
+        help=(
+            "After successful TEITOK conversion, run 'flexipipe' on the result. "
+            "Optional ARGS are inserted before the XML path; use {project} to "
+            "refer to the TEITOK project root (if detected)."
+        ),
+    )
+    p.add_argument(
         "--option",
         help="Format-specific option (e.g. TMX: join|annotate).",
     )
@@ -713,6 +756,8 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
             common += ["--spacing-mode", args.spacing_mode]
         if getattr(args, "vert_no_doc_split", False):
             common.append("--vert-no-doc-split")
+        if getattr(args, "flexipipe", None):
+            common += ["--flexipipe", args.flexipipe]
 
         total = 0
         errors = 0
@@ -1033,6 +1078,39 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
         # Savers that only accept (doc, path) or (doc, path=...)
         out_fmt.saver(doc, output_path)  # type: ignore[arg-type]
 
+    # Optional post-processing: run flexipipe on the resulting TEITOK file.
+    flexipipe_args_tmpl = getattr(args, "flexipipe", None)
+    if flexipipe_args_tmpl is not None and out_fmt_name == "teitok":
+        project_root = getattr(args, "teitok_project", None) or _find_teitok_project_root(
+            output_path
+        )
+        # Substitute only {project}; the XML path is always appended as final arg.
+        try:
+            extra_args_str = (flexipipe_args_tmpl or "").format(
+                project=project_root or "",
+            )
+        except Exception as exc:
+            sys.stderr.write(f"[flexiconv] Invalid flexipipe args: {exc}\n")
+            return 1
+        try:
+            extra_args = shlex.split(extra_args_str) if extra_args_str else []
+        except ValueError as exc:
+            sys.stderr.write(f"[flexiconv] Invalid flexipipe args: {exc}\n")
+            return 1
+        cmd = ["flexipipe"] + extra_args + [output_path]
+        if args.verbose:
+            sys.stderr.write(f"[flexiconv] Running flexipipe: {' '.join(cmd)}\n")
+        try:
+            result = subprocess.run(cmd, check=False)
+        except Exception as exc:
+            sys.stderr.write(f"[flexiconv] flexipipe command failed: {exc}\n")
+            return 1
+        if result.returncode != 0:
+            sys.stderr.write(
+                f"[flexiconv] flexipipe returned non-zero exit code {result.returncode}\n"
+            )
+            return result.returncode
+
     return 0
 
 
@@ -1051,8 +1129,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     if "--list-formats" in argv and not any(
         cmd in argv for cmd in ("info", "install", "update", "convert")
     ):
-        # Ignore everything else and just list formats
-        return _cmd_info(["formats"])
+        info_argv = ["formats"]
+        if "--json" in argv:
+            info_argv.append("--json")
+        return _cmd_info(info_argv)
 
     # Subcommands: flexiconv info|install|update|convert ...
     if argv:

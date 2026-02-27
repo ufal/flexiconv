@@ -28,6 +28,25 @@ Key points:
 - Default output format in a TEITOK project is **`teitok`**.
 - Originals can be copied into `Originals/` with `--copy-original`.
 
+## Running NLP with flexipipe
+
+Flexiconv can optionally call `flexipipe` right after writing TEITOK XML:
+
+```bash
+# Let flexipipe decide everything based on the XML
+flexiconv input.docx output.xml -t teitok --flexipipe
+
+# Pass additional flexipipe arguments; {project} is the TEITOK project root
+flexiconv Originals/sample.txt -t teitok --teitok-project /path/to/project \
+  --flexipipe "--project {project} --language en"
+```
+
+This runs:
+
+- `flexipipe [ARGS...] OUTPUT_XML`
+
+so you never repeat the `flexipipe` word or the XML path yourself; you only supply extra arguments when needed.
+
 ## Spoken corpora (ELAN, TRS, TextGrid, EXMARaLDA, CHAT, SRT)
 
 ```bash

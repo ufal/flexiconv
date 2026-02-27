@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import os
 import re
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
+from lxml import etree
+
 from ..core.model import Anchor, AnchorType, Document, Node, Span
+from .teitok_xml import _ensure_tei_header, _set_paragraph_content
 
 
 def _rtf_to_text_and_runs(rtf: str) -> Tuple[str, List[Tuple[int, int, str]]]:
@@ -126,22 +130,24 @@ def _require_striprtf():
 
 
 def load_rtf(path: str, *, doc_id: Optional[str] = None) -> Document:
-    """Load an RTF document into the pivot Document without tokenization.
+    """Load an RTF document into the pivot Document.
 
-    Current behaviour:
-    - Preserve the raw RTF source in Document.meta['rtf_source'].
-    - Extract a plain-text approximation via striprtf into meta['plain_text'].
-    - Create a simple 'structure' layer with paragraph-like nodes
-      anchored by character offsets in the plain text.
+    Behaviour:
+    - Preserve the raw RTF source in ``Document.meta['rtf_source']``.
+    - Parse the RTF to a plain-text string plus simple inline formatting runs
+      (bold / italic) via ``_rtf_to_text_and_runs``; fall back to ``striprtf``
+      when that fails.
+    - Create a ``structure`` layer with paragraph-like nodes anchored by
+    - character offsets in the plain text.
+    - Create a ``rendition`` layer with character-span highlights for bold /
+      italic so downstream formats can reconstruct ``<hi>`` markup.
+    - Build a TEITOK-style TEI tree with ``<p>`` and inline ``<hi>`` elements
+      from the structure + rendition layers and store it in
+      ``Document.meta['_teitok_tei_root']`` so ``save_teitok`` can write it
+      verbatim (similar to the DOCX converter).
 
-    No tokens or sentences are created; segmentation/tokenization should be
-    done later (e.g. via flexipipe) in a language-aware way.
-
-    Typesetting: FPM is designed to represent full typesetting (structure +
-    spans with style/rendition). This loader does *not* yet parse RTF control
-    words (bold, italic, headings, fonts, etc.) into FPM; only raw RTF is
-    kept for round-trip. A future RTF→FPM pass could populate structure nodes
-    and spans from RTF so that any exporter can reproduce formatting.
+    No tokens or sentences are created; text/token segmentation is intentionally
+    left to flexipipe or other NLP components.
     """
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         rtf_content = f.read()
@@ -194,6 +200,52 @@ def load_rtf(path: str, *, doc_id: Optional[str] = None) -> Document:
                 attrs={"rend": rend},
             )
             rendition.spans[span.id] = span
+    else:
+        rendition = doc.layers.get("rendition")
+
+    # Build a TEITOK-style TEI tree from structure + rendition so save_teitok
+    # (and TEITOK itself) can reuse it directly, mirroring the DOCX workflow.
+    tei = etree.Element("TEI")
+    when_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    source_filename = os.path.basename(path)
+    _ensure_tei_header(tei, source_filename=source_filename, when=when_iso)
+
+    basename, _ = os.path.splitext(source_filename)
+    text_el = etree.SubElement(tei, "text", id=basename)
+    body_el = etree.SubElement(text_el, "body")
+
+    structure_layer = doc.layers.get("structure")
+    if structure_layer and structure_layer.nodes:
+        struct_nodes = sorted(
+            structure_layer.nodes.values(),
+            key=lambda n: (
+                n.anchors[0].char_start
+                if n.anchors and n.anchors[0].char_start is not None
+                else 0,
+                n.id,
+            ),
+        )
+        for node in struct_nodes:
+            if (
+                not node.anchors
+                or node.anchors[0].char_start is None
+                or node.anchors[0].char_end is None
+            ):
+                continue
+            para_start = node.anchors[0].char_start
+            para_end = node.anchors[0].char_end
+            para_text = text[para_start:para_end]
+            p_el = etree.SubElement(body_el, "p")
+            _set_paragraph_content(
+                p_el,
+                para_text,
+                para_start,
+                para_end,
+                rendition,
+            )
+
+    doc.meta["_teitok_tei_root"] = tei
+    doc.meta["source_filename"] = source_filename
 
     return doc
 

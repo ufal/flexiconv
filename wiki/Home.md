@@ -57,6 +57,25 @@ flexiconv -R corpora/raw corpora/xml -t teitok
 flexiconv -R -f vert corpora/vrt corpora/xml -t teitok
 ```
 
+### Chaining NLP with flexipipe
+
+After writing TEITOK XML you can optionally run `flexipipe` in one step:
+
+```bash
+# Use flexipipe defaults; XML path is appended automatically
+flexiconv input.docx output.xml -t teitok --flexipipe
+
+# Inside a TEITOK project, pass the project root to flexipipe
+flexiconv Originals/sample.txt -t teitok --teitok-project /path/to/project \
+  --flexipipe "--project {project}"
+```
+
+In both cases Flexiconv runs:
+
+- `flexipipe [ARGS...] OUTPUT_XML`
+
+where `OUTPUT_XML` is the TEITOK file it just wrote, and `{project}` (if used) is replaced by the detected / given TEITOK project root.
+
 See [Formats](Formats.md) for an overview of all supported formats and links to per-format pages.
 
 **Example files.** The repository’s [`examples/`](../examples/) folder contains sample files for many supported formats (e.g. `examples/trs/sample.trs`, `examples/vert/desam-v20.vert`), typically taken from real corpus projects. Use them to try conversions without your own data.
