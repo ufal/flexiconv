@@ -964,129 +964,42 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
             )
         return _fail(f"Unknown output format: {out_fmt_name}")
 
-    # Load → convert (pivot) → save
-    loader_kwargs: dict = {}
-    if in_fmt_name == "txt":
-        loader_kwargs["linebreaks"] = getattr(args, "linebreaks", "paragraph")
-    if in_fmt_name == "hocr":
-        # Allow disabling hOCR punctuation splitting so downstream tools (e.g. flexipipe)
-        # can apply more sophisticated tokenization and to avoid creating extra tokens
-        # without clear bbox correspondence when converting back to hOCR.
-        loader_kwargs["split_punct"] = not getattr(args, "hocr_no_split_punct", False)
-        loader_kwargs["hyphen_truncation"] = getattr(args, "hocr_hyphen_truncation", False)
-    if in_fmt_name == "eaf":
-        loader_kwargs["style"] = getattr(args, "eaf_style", "generic")
-    if in_fmt_name == "tmx" and getattr(args, "option", None):
-        opt = getattr(args, "option", "").lower()
-        # Map split→join for now, since flexiconv does not yet emit multiple files.
-        if opt in {"join", "annotate"}:
-            loader_kwargs["mode"] = opt
-        elif opt == "split":
-            loader_kwargs["mode"] = "join"
-    if in_fmt_name == "brat" and getattr(args, "option", None):
-        # Parse BRAT-specific options of the form:
-        #   --option "plain=/path/to/text.txt;ann=/path/to/anno1.ann,/path/to/anno2.ann"
-        opt_raw = getattr(args, "option", "")
-        for part in opt_raw.split(";"):
-            part = part.strip()
-            if not part or "=" not in part:
-                continue
-            key, val = part.split("=", 1)
-            key = key.strip().lower()
-            val = val.strip()
-            if key == "plain" and val:
-                loader_kwargs["plain_path"] = val
-            elif key == "ann" and val:
-                loader_kwargs["ann_paths"] = [p.strip() for p in val.split(",") if p.strip()]
-    if in_fmt_name == "vert" and getattr(args, "option", None):
-        # Parse VERT-specific options of the form:
-        #   --option "cols=form,lemma,pos,feats"
-        #   --option "registry=/path/to/registry"
-        opt_raw = getattr(args, "option", "")
-        for part in opt_raw.split(";"):
-            part = part.strip()
-            if not part or "=" not in part:
-                continue
-            key, val = part.split("=", 1)
-            key = key.strip().lower()
-            val = val.strip()
-            if not val:
-                continue
-            if key == "registry":
-                loader_kwargs["registry"] = val
-            elif key in {"cols", "columns"}:
-                loader_kwargs["columns"] = [c.strip() for c in val.split(",") if c.strip()]
-    if in_fmt_name == "vert":
-        # CLI flags for spacing and doc-splitting.
-        loader_kwargs["spacing_mode"] = getattr(args, "spacing_mode", "guess")
-        if getattr(args, "vert_no_doc_split", False):
-            loader_kwargs["split_on_doc"] = False
-    if in_fmt_name == "vert" and getattr(args, "option", None):
-        # Parse VERT-specific options of the form:
-        #   --option "cols=form,lemma,pos,feats"
-        #   --option "registry=/path/to/registry"
-        opt_raw = getattr(args, "option", "")
-        for part in opt_raw.split(";"):
-            part = part.strip()
-            if not part or "=" not in part:
-                continue
-            key, val = part.split("=", 1)
-            key = key.strip().lower()
-            val = val.strip()
-            if not val:
-                continue
-            if key == "registry":
-                loader_kwargs["registry"] = val
-            elif key in {"cols", "columns"}:
-                loader_kwargs["columns"] = [c.strip() for c in val.split(",") if c.strip()]
-    try:
-        try:
-            doc = in_fmt.loader(path=input_path, **loader_kwargs)
-        except TypeError:
-            # Fallback for loaders that just take a positional path
-            doc = in_fmt.loader(input_path, **loader_kwargs)
-    except RuntimeError as exc:
-        # Gracefully report loader-specific runtime problems (e.g. missing optional deps)
-        sys.stderr.write(f"[flexiconv] {exc}\n")
-        return 1
-
-    # Verbose reporting about potential information loss
-    if args.verbose:
-        # Layers not handled by this output format
-        supported_layers = set(out_fmt.supported_layers or ())
-        present_layers = set(doc.layers.keys())
-        unsupported = sorted(present_layers - supported_layers)
-        if unsupported:
-            sys.stderr.write(
-                f"[flexiconv] Warning: output format '{out_fmt.name}' does not export "
-                f"the following layers; they will be ignored: {', '.join(unsupported)}\n"
-            )
-        # Media/timelines not used by current simple exporters
-        if doc.media or doc.timelines:
-            sys.stderr.write(
-                f"[flexiconv] Warning: output format '{out_fmt.name}' currently ignores "
-                "media resources and timelines.\n"
-            )
-
-    saver_kwargs: dict = {}
-    if out_fmt_name == "teitok":
-        saver_kwargs["source_path"] = input_path
-        if detected_mime:
-            doc.meta["source_mime"] = detected_mime
-        if getattr(args, "teitok_project", None):
-            saver_kwargs["teitok_project_root"] = args.teitok_project
-        if getattr(args, "copy_original", False):
-            saver_kwargs["copy_original_to_originals"] = True
-        if getattr(args, "prettyprint", False):
-            saver_kwargs["prettyprint"] = True
-    if out_fmt_name == "txt":
-        saver_kwargs["linebreaks"] = getattr(args, "linebreaks", "paragraph")
+    # Load → convert (pivot) → save (via API for progress/GUI integration)
+    convert_options = {
+        "force": getattr(args, "force", False),
+        "linebreaks": getattr(args, "linebreaks", "paragraph"),
+        "hocr_no_split_punct": getattr(args, "hocr_no_split_punct", False),
+        "hocr_hyphen_truncation": getattr(args, "hocr_hyphen_truncation", False),
+        "eaf_style": getattr(args, "eaf_style", None),
+        "option": getattr(args, "option", None),
+        "prettyprint": getattr(args, "prettyprint", False),
+        "spacing_mode": getattr(args, "spacing_mode", None),
+        "vert_no_doc_split": getattr(args, "vert_no_doc_split", False),
+        "teitok_project": getattr(args, "teitok_project", None),
+        "copy_original": getattr(args, "copy_original", False),
+    }
+    def _progress_cb(current: int, total: int, message: str) -> None:
+        sys.stderr.write(f"  {message}: {current}/{total}\r")
+        sys.stderr.flush()
 
     try:
-        out_fmt.saver(doc, path=output_path, **saver_kwargs)
-    except TypeError:
-        # Savers that only accept (doc, path) or (doc, path=...)
-        out_fmt.saver(doc, output_path)  # type: ignore[arg-type]
+        from .api import run_convert as api_run_convert, CancelError
+        result = api_run_convert(
+            input_path,
+            output_path,
+            from_format=in_fmt_name,
+            to_format=out_fmt_name,
+            options=convert_options,
+            progress_callback=_progress_cb if args.verbose else None,
+            cancel_check=None,
+        )
+    except CancelError:
+        sys.stderr.write("[flexiconv] Conversion cancelled.\n")
+        return 130
+    if not result.success:
+        return _fail(result.error_message or "Conversion failed")
+
+    # Verbose reporting is done inside the API when options contain verbose; CLI skips here.
 
     # Optional post-processing: run flexipipe on the resulting TEITOK file.
     flexipipe_args_tmpl = getattr(args, "flexipipe", None)

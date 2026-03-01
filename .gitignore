@@ -1,6 +1,7 @@
 # Local-only source and scratch areas
 dev/
 git/
+gui/
 tmp/
 tests/
 teitok/
@@ -19,6 +20,12 @@ dist/
 *.egg-info/
 flexiconv.egg-info/
 .eggs/
+
+# Releaseable app installers (apps/README.md is kept)
+apps/*.dmg
+apps/*.exe
+apps/*.AppImage
+apps/*.app
 
 # Virtual environments
 .venv/

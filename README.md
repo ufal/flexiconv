@@ -56,6 +56,10 @@ flexiconv info formats
 flexiconv info format vert
 ```
 
+### Desktop app (flexiConv)
+
+A **standalone desktop GUI** is available for conversion and (planned) deduplication — no Python install required. Download the installer for your platform from the **[`apps/`](apps/)** folder (or from [Releases](https://github.com/ufal/flexiconv/releases) when published). See `apps/README.md` for supported platforms and how to build the apps from source.
+
 ### Documentation
 
 - **Pivot model and mapping design**: see `dev/PIVOT_FORMAT.md` and `dev/FORMATS_AND_MAPPINGS.md`.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flexiconv"
-version = "0.3.0"
+version = "0.3.1"
 description = "Flexible corpus and document converter with a TEI/TEITOK-compatible pivot format."
 authors = [
   { name = "Maarten Janssen" }
@@ -32,7 +32,7 @@ Homepage = "https://github.com/ufal/flexiconv"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["flexiconv", "flexiconv.core", "flexiconv.io"]
+include = ["flexiconv", "flexiconv.core", "flexiconv.io", "flexiconv.api"]
 
 [project.scripts]
 flexiconv = "flexiconv.cli:main"
