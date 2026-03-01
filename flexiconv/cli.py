@@ -1288,7 +1288,7 @@ def _cmd_duplicates(argv: list[str]) -> int:
         "--quiet",
         "-q",
         action="store_true",
-        help="No progress bar on stderr (use when parsing stdout, e.g. JSON in TEITOK).",
+        help="No progress bar on stderr. Use when parsing stdout (e.g. --json in scripts) and you want no progress output.",
     )
     args = p.parse_args(argv)
     paths: list[str] = []
@@ -1496,7 +1496,7 @@ def _cmd_duplicates(argv: list[str]) -> int:
         hash_to_files: Dict[str, List[str]] = {}
         current_rels: set[str] = set()
         paths_sorted = sorted(paths)
-        show_progress = not getattr(args, "json", False) and not getattr(args, "quiet", False)
+        show_progress = not getattr(args, "quiet", False)
         for path in _progress_iter(paths_sorted, len(paths_sorted), "files", enabled=show_progress):
             rel = _path_relative_to_base(path, base_for_display)
             current_rels.add(rel)
@@ -1610,14 +1610,14 @@ def _cmd_duplicates(argv: list[str]) -> int:
         return 0 if not index_groups else 1
     if getattr(args, "by_content", False):
         hash_to_paths_list: Dict[str, List[str]] = {}
-        show_progress = not getattr(args, "json", False) and not getattr(args, "quiet", False)
+        show_progress = not getattr(args, "quiet", False)
         for path in _progress_iter(paths, len(paths), "files", enabled=show_progress):
             h = _content_fingerprint_hash(path)
             if h is not None:
                 hash_to_paths_list.setdefault(h, []).append(path)
         groups = [g for g in hash_to_paths_list.values() if len(g) > 1]
     else:
-        show_progress = not getattr(args, "json", False) and not getattr(args, "quiet", False)
+        show_progress = not getattr(args, "quiet", False)
         paths_iter = _progress_iter(paths, len(paths), "files", enabled=show_progress)
         groups = find_duplicate_teitok_files(paths_iter)
     if args.json:
