@@ -14,6 +14,7 @@ If you have installed the wrapper, you can run `flexiconv` instead of `python -m
 | --- | --- |
 | `flexiconv INPUT [OUTPUT]` | Single-file conversion (default command) |
 | `flexiconv convert` | Explicit convert subcommand (same core options) |
+| `flexiconv duplicates` | Find exact and near-identical duplicates; build or query an index (see [Deduplication](Deduplication.md)) |
 | `flexiconv info` | Inspect formats and their data types |
 | `flexiconv install` | Install optional extras (RTF, TEI-CORPO integration, Annatto) |
 | `flexiconv update` | Show how to upgrade Flexiconv and extras |
@@ -77,5 +78,7 @@ In both cases Flexiconv runs:
 where `OUTPUT_XML` is the TEITOK file it just wrote, and `{project}` (if used) is replaced by the detected / given TEITOK project root.
 
 See [Formats](Formats.md) for an overview of all supported formats and links to per-format pages.
+
+[Deduplication](Deduplication.md) describes how to find exact and near-identical duplicates, build an index (including incremental and cross-format), and use it from the CLI or in tools like TEITOK EasyCorp.
 
 **Example files.** The repository’s [`examples/`](../examples/) folder contains sample files for many supported formats (e.g. `examples/trs/sample.trs`, `examples/vert/desam-v20.vert`), typically taken from real corpus projects. Use them to try conversions without your own data.

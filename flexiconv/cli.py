@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -8,7 +9,7 @@ import shlex
 import sys
 import subprocess
 import unicodedata
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from . import (
     load_rtf,
@@ -21,7 +22,16 @@ from . import (
 )
 from .registry import InputFormat, OutputFormat, registry
 from .mime import describe_unsupported_mime, detect_mime, mime_to_format, path_to_input_format, path_to_output_format
-from .io.teitok_xml import _find_teitok_project_root
+from .io.teitok_xml import _find_teitok_project_root, find_duplicate_teitok_files, teitok_text_fingerprint, teitok_text_fingerprint_hash
+from .io.txt import document_to_plain_text, normalize_text_for_fingerprint
+from .io.near_dup import (
+    lsh_bands,
+    minhash_signature,
+    signature_from_blob,
+    signature_similarity,
+    signature_to_blob,
+    shingle_text,
+)
 
 
 def _lazy_loader(module: str, attr: str):
@@ -1114,6 +1124,518 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
     return 0
 
 
+def _content_fingerprint_hash(path: str) -> Optional[str]:
+    """Hash of convert-to-text content (any supported format). Load → document_to_plain_text → normalize → SHA-256.
+    Returns None if format unknown or load fails."""
+    fmt_name = path_to_input_format(path)
+    if not fmt_name:
+        return None
+    in_fmt = registry.get_input(fmt_name)
+    if not in_fmt or not getattr(in_fmt, "loader", None):
+        return None
+    loader_kwargs: Dict[str, Any] = {}
+    if fmt_name == "txt":
+        loader_kwargs["linebreaks"] = "paragraph"
+    if fmt_name == "hocr":
+        loader_kwargs["split_punct"] = True
+    try:
+        try:
+            doc = in_fmt.loader(path, **loader_kwargs)
+        except TypeError:
+            doc = in_fmt.loader(path)
+    except Exception:
+        return None
+    text = document_to_plain_text(doc)
+    normalized = normalize_text_for_fingerprint(text)
+    if not normalized:
+        return None
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _normalized_text_for_path(path: str, by_content: bool) -> Optional[str]:
+    """Return normalized text for path (for near-dup shingling). Same source as exact hash."""
+    if by_content:
+        fmt_name = path_to_input_format(path)
+        if not fmt_name:
+            return None
+        in_fmt = registry.get_input(fmt_name)
+        if not in_fmt or not getattr(in_fmt, "loader", None):
+            return None
+        try:
+            doc = in_fmt.loader(path)
+        except Exception:
+            return None
+        text = document_to_plain_text(doc)
+        return normalize_text_for_fingerprint(text) or None
+    try:
+        return teitok_text_fingerprint(path)
+    except Exception:
+        return None
+
+
+def _common_base(paths: List[str]) -> Optional[str]:
+    """Return a common base directory for paths, or None. Used to show relative paths in duplicate output."""
+    if not paths:
+        return None
+    try:
+        abs_paths = [os.path.abspath(p) for p in paths]
+        if len(abs_paths) == 1:
+            return os.path.dirname(abs_paths[0])
+        return os.path.commonpath(abs_paths)
+    except (ValueError, TypeError):
+        return None
+
+
+def _path_relative_to_base(path: str, base: Optional[str]) -> str:
+    """Path relative to base, or basename if no base. Uses forward slashes for readability."""
+    if base:
+        try:
+            rel = os.path.relpath(os.path.abspath(path), os.path.abspath(base))
+            return rel.replace(os.sep, "/")
+        except ValueError:
+            pass
+    return os.path.basename(path)
+
+
+def _chunks(lst: List[str], n: int):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
+def _progress_iter(iterable: List[str], total: int, desc: str = "files", enabled: bool = True):
+    """Wrap an iterable and write progress to stderr (e.g. '  files: 123/456\\r'). Does not touch stdout."""
+    if not enabled or total == 0:
+        yield from iterable
+        return
+    n = 0
+    for item in iterable:
+        n += 1
+        sys.stderr.write(f"  {desc}: {n}/{total}\r")
+        sys.stderr.flush()
+        yield item
+    sys.stderr.write("\n")
+    sys.stderr.flush()
+
+
+def _cmd_duplicates(argv: list[str]) -> int:
+    """List TEITOK XML files that are duplicates (same space-normalized <text> content).
+    Detection is exact only: identical normalized text → same hash. Near-identical texts are not grouped."""
+    p = argparse.ArgumentParser(
+        prog="flexiconv duplicates",
+        description="Find TEITOK XML files with identical text content (space-normalized <text>). Exact match only; near-identical texts are not detected.",
+    )
+    p.add_argument(
+        "paths",
+        nargs="*",
+        metavar="PATH",
+        help="Paths to TEITOK XML files or a directory (scans for *.xml). Omit when using --from-list, --from-index, or when run inside a TEITOK project (defaults to xmlfiles/).",
+    )
+    p.add_argument(
+        "--from-list",
+        metavar="FILE",
+        help="Read paths from FILE (one path per line). Use to avoid long command lines (e.g. from PHP).",
+    )
+    p.add_argument(
+        "--from-index",
+        metavar="PATH",
+        help="List duplicate groups from this index. In a TEITOK project, defaults to tmp/deduplication.sqlite when omitted (and no paths/--from-list/--index).",
+    )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Output duplicate groups as JSON array of filename arrays (applies to both index and path scan).",
+    )
+    p.add_argument(
+        "--index",
+        action="store_true",
+        help="Output one line per file: SHA256(fingerprint)\\tbasename (for easycorp). Only printed when --verbose.",
+    )
+    p.add_argument(
+        "--output",
+        metavar="PATH",
+        help="Write index to PATH. If PATH ends with .sqlite, use SQLite (WaC-style). Inside a TEITOK project with --index, defaults to tmp/deduplication.sqlite when omitted.",
+    )
+    p.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="With --index: print each hash\\tbasename line to stdout. Omit for large corpora to avoid slowdown.",
+    )
+    p.add_argument(
+        "--by-content",
+        action="store_true",
+        help="Use convert-to-text fingerprint for any supported format (RTF, DOCX, XML, etc.): load file, extract plain text (same as save_txt), normalize spaces, hash. Enables comparing mixed folders (e.g. RTF and DOCX versions of the same text). Scans all supported extensions.",
+    )
+    p.add_argument(
+        "--incremental",
+        action="store_true",
+        help="With --index and SQLite: only re-hash files whose mtime/size changed; remove index entries for deleted files. Much faster for large corpora after the first run.",
+    )
+    p.add_argument(
+        "--near-identical",
+        action="store_true",
+        help="With --index: also build MinHash+LSH index for near-duplicate detection. With --from-index: list near-duplicate groups (similarity >= --threshold). Requires SQLite.",
+    )
+    p.add_argument(
+        "--threshold",
+        type=float,
+        default=0.8,
+        metavar="F",
+        help="Similarity threshold for near-identical (0.0–1.0). Default 0.8. Used with --near-identical.",
+    )
+    p.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="No progress bar on stderr (use when parsing stdout, e.g. JSON in TEITOK).",
+    )
+    args = p.parse_args(argv)
+    paths: list[str] = []
+    teitok_project: Optional[str] = None
+    from_index = (getattr(args, "from_index", None) or "").strip()
+    # Default index when only comparing (no --index, no paths/list): use TEITOK tmp/deduplication.sqlite
+    if not from_index and not args.index and not args.paths and not args.from_list:
+        cwd = os.getcwd()
+        proj = _find_teitok_project_root(cwd) or _find_teitok_project_root(
+            os.path.join(cwd, "xmlfiles")
+        )
+        if proj:
+            from_index = os.path.join(proj, "tmp", "deduplication.sqlite")
+
+    # List duplicates from an existing index (no path scan)
+    if from_index:
+        idx_path = os.path.abspath(os.path.normpath(from_index))
+        if not os.path.isfile(idx_path):
+            print("Index file not found: " + idx_path, file=sys.stderr)
+            print("Run with --index to build the index (e.g. flexiconv duplicates --index).", file=sys.stderr)
+            return 1
+        groups: List[List[str]] = []
+        if idx_path.lower().endswith(".sqlite"):
+            try:
+                import sqlite3
+                conn = sqlite3.connect(idx_path)
+                near_identical = getattr(args, "near_identical", False)
+                threshold = max(0.0, min(1.0, getattr(args, "threshold", 0.8)))
+                if near_identical:
+                    try:
+                        rows = conn.execute("SELECT path, sig FROM near_dup_sigs").fetchall()
+                    except sqlite3.OperationalError:
+                        rows = []
+                    if rows:
+                        path_to_sig: Dict[str, List[int]] = {}
+                        for path, sig_blob in rows:
+                            if path and sig_blob:
+                                path_to_sig[path] = signature_from_blob(sig_blob)
+                        buckets: Dict[Tuple[int, str], set] = {}
+                        for band_id, bucket, path in conn.execute("SELECT band_id, bucket, path FROM near_dup_lsh").fetchall():
+                            key = (band_id, bucket)
+                            buckets.setdefault(key, set()).add(path)
+                        candidate_pairs: set = set()
+                        for path, sig in path_to_sig.items():
+                            for band_id, bucket in lsh_bands(sig):
+                                key = (band_id, bucket)
+                                for other in buckets.get(key, set()):
+                                    if other != path:
+                                        candidate_pairs.add((min(path, other), max(path, other)))
+                        uf: Dict[str, str] = {}
+
+                        def find(x: str) -> str:
+                            if x not in uf:
+                                uf[x] = x
+                            if uf[x] != x:
+                                uf[x] = find(uf[x])
+                            return uf[x]
+
+                        def union(x: str, y: str) -> None:
+                            uf[find(x)] = find(y)
+
+                        for p, q in candidate_pairs:
+                            if signature_similarity(path_to_sig[p], path_to_sig[q]) >= threshold:
+                                union(p, q)
+                        roots: Dict[str, List[str]] = {}
+                        for path in path_to_sig:
+                            r = find(path)
+                            roots.setdefault(r, []).append(path)
+                        groups = [sorted(comp) for comp in roots.values() if len(comp) >= 2]
+                        conn.close()
+                        if getattr(args, "json", False):
+                            print(json.dumps(groups, indent=2))
+                            return 0 if not groups else 1
+                        for g in groups:
+                            print("Near-identical set (%d files, >=%.2f):" % (len(g), threshold))
+                            for fn in g:
+                                print("  ", fn)
+                            print()
+                        return 0 if not groups else 1
+                cur = conn.execute("SELECT hash, filename FROM dedup_index")
+                hash_to_files = {}
+                for row in cur.fetchall():
+                    h, fn = (row[0] or "").strip(), (row[1] or "").strip()
+                    if h and fn:
+                        hash_to_files.setdefault(h, []).append(fn)
+                conn.close()
+                groups = [sorted(files) for files in hash_to_files.values() if len(files) > 1]
+            except Exception as e:
+                print("Error reading SQLite index: " + str(e), file=sys.stderr)
+                return 1
+        else:
+            try:
+                with open(idx_path, encoding="utf-8") as f:
+                    hash_to_files = {}
+                    for line in f:
+                        parts = line.strip().split("\t", 1)
+                        if len(parts) == 2:
+                            h, fn = parts[0].strip(), parts[1].strip()
+                            if h and fn:
+                                hash_to_files.setdefault(h, []).append(fn)
+                    groups = [sorted(files) for files in hash_to_files.values() if len(files) > 1]
+            except OSError as e:
+                print("Error reading index file: " + str(e), file=sys.stderr)
+                return 1
+        if getattr(args, "json", False):
+            print(json.dumps(groups, indent=2))
+            return 0 if not groups else 1
+        for g in groups:
+            print("Duplicate set (%d files):" % len(g))
+            for fn in g:
+                print("  ", fn)
+            print()
+        return 0 if not groups else 1
+
+    if args.from_list:
+        try:
+            with open(args.from_list, encoding="utf-8") as f:
+                for line in f:
+                    pth = line.strip()
+                    if pth:
+                        paths.append(os.path.abspath(os.path.normpath(pth)))
+        except OSError:
+            pass
+    else:
+        if not args.paths:
+            cwd = os.getcwd()
+            teitok_project = _find_teitok_project_root(cwd) or _find_teitok_project_root(
+                os.path.join(cwd, "xmlfiles")
+            )
+            if teitok_project:
+                xmlfiles_dir = os.path.join(teitok_project, "xmlfiles")
+                if os.path.isdir(xmlfiles_dir):
+                    args.paths = [xmlfiles_dir]
+        for x in args.paths:
+            # Resolve to absolute so directory detection works when cwd differs from caller (e.g. PHP/Apache)
+            x_abs = os.path.abspath(os.path.normpath(x))
+            if os.path.isdir(x_abs):
+                by_content = getattr(args, "by_content", False)
+                for root, _dirs, files in os.walk(x_abs):
+                    for f in files:
+                        full = os.path.join(root, f)
+                        if by_content:
+                            if path_to_input_format(full) is not None:
+                                paths.append(full)
+                        elif f.lower().endswith(".xml"):
+                            paths.append(full)
+            else:
+                paths.append(x_abs)
+        if teitok_project is None and paths:
+            first_dir = os.path.dirname(paths[0])
+            teitok_project = _find_teitok_project_root(first_dir)
+    base_for_display = _common_base(paths)
+    if not paths:
+        if args.json:
+            print("[]")
+        return 0
+    if args.index:
+        # One line per file: hash\tbasename. Used by easycorp to rebuild duplicate index from <text> content.
+        # Optional --output PATH: if PATH ends with .sqlite, also write to SQLite for fast lookup (WaC-style).
+        # Inside a TEITOK project, default --output to tmp/deduplication.sqlite when omitted.
+        sqlite_path = None
+        out_arg = getattr(args, "output", None)
+        if out_arg and out_arg.strip():
+            out = out_arg.strip()
+            if out.lower().endswith(".sqlite"):
+                sqlite_path = os.path.abspath(os.path.normpath(out))
+        elif teitok_project:
+            default_sqlite = os.path.join(teitok_project, "tmp", "deduplication.sqlite")
+            sqlite_path = os.path.abspath(os.path.normpath(default_sqlite))
+        conn = None
+        incremental = getattr(args, "incremental", False) and bool(sqlite_path)
+        near_identical = getattr(args, "near_identical", False)
+        if sqlite_path:
+            try:
+                import sqlite3
+                parent = os.path.dirname(sqlite_path)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+                conn = sqlite3.connect(sqlite_path)
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS dedup_index (hash TEXT NOT NULL, filename TEXT NOT NULL, PRIMARY KEY (hash, filename))"
+                )
+                if incremental:
+                    conn.execute(
+                        "CREATE TABLE IF NOT EXISTS dedup_meta (path TEXT PRIMARY KEY, mtime REAL NOT NULL, size INTEGER NOT NULL, hash TEXT NOT NULL)"
+                    )
+                else:
+                    conn.execute("DELETE FROM dedup_index")
+                near_identical = getattr(args, "near_identical", False) and bool(sqlite_path)
+                if near_identical:
+                    conn.execute(
+                        "CREATE TABLE IF NOT EXISTS near_dup_sigs (path TEXT PRIMARY KEY, mtime REAL NOT NULL, size INTEGER NOT NULL, sig BLOB NOT NULL)"
+                    )
+                    conn.execute(
+                        "CREATE TABLE IF NOT EXISTS near_dup_lsh (band_id INTEGER NOT NULL, bucket TEXT NOT NULL, path TEXT NOT NULL, PRIMARY KEY (band_id, bucket, path))"
+                    )
+                    if not incremental:
+                        conn.execute("DELETE FROM near_dup_sigs")
+                        conn.execute("DELETE FROM near_dup_lsh")
+                conn.commit()
+            except Exception:
+                conn = None
+                sqlite_path = None
+                incremental = False
+        hash_to_files: Dict[str, List[str]] = {}
+        current_rels: set[str] = set()
+        paths_sorted = sorted(paths)
+        show_progress = not getattr(args, "json", False) and not getattr(args, "quiet", False)
+        for path in _progress_iter(paths_sorted, len(paths_sorted), "files", enabled=show_progress):
+            rel = _path_relative_to_base(path, base_for_display)
+            current_rels.add(rel)
+            if incremental and conn is not None:
+                try:
+                    mtime = os.path.getmtime(path)
+                    size = os.path.getsize(path)
+                except OSError:
+                    mtime = size = None
+                if mtime is not None and size is not None:
+                    row = conn.execute(
+                        "SELECT mtime, size, hash FROM dedup_meta WHERE path = ?", (rel,)
+                    ).fetchone()
+                    if row is not None and row[0] == mtime and row[1] == size:
+                        hash_to_files.setdefault(row[2], []).append(rel)
+                        continue
+                h = _content_fingerprint_hash(path) if getattr(args, "by_content", False) else teitok_text_fingerprint_hash(path)
+                try:
+                    conn.execute("DELETE FROM dedup_index WHERE filename = ?", (rel,))
+                    conn.execute("DELETE FROM dedup_meta WHERE path = ?", (rel,))
+                    if h is not None:
+                        conn.execute(
+                            "INSERT INTO dedup_index (hash, filename) VALUES (?, ?)", (h, rel)
+                        )
+                        if mtime is not None and size is not None:
+                            conn.execute(
+                                "INSERT OR REPLACE INTO dedup_meta (path, mtime, size, hash) VALUES (?, ?, ?, ?)",
+                                (rel, mtime, size, h),
+                            )
+                        hash_to_files.setdefault(h, []).append(rel)
+                        if getattr(args, "verbose", False):
+                            print(h + "\t" + rel)
+                except Exception:
+                    pass
+                if near_identical and conn is not None:
+                    text = _normalized_text_for_path(path, getattr(args, "by_content", False))
+                    if text:
+                        shingles = shingle_text(text)
+                        if shingles:
+                            sig = minhash_signature(shingles)
+                            try:
+                                conn.execute("DELETE FROM near_dup_sigs WHERE path = ?", (rel,))
+                                conn.execute("DELETE FROM near_dup_lsh WHERE path = ?", (rel,))
+                                conn.execute(
+                                    "INSERT OR REPLACE INTO near_dup_sigs (path, mtime, size, sig) VALUES (?, ?, ?, ?)",
+                                    (rel, mtime if mtime is not None else 0, size if size is not None else 0, signature_to_blob(sig)),
+                                )
+                                for band_id, bucket in lsh_bands(sig):
+                                    conn.execute("INSERT OR REPLACE INTO near_dup_lsh (band_id, bucket, path) VALUES (?, ?, ?)", (band_id, bucket, rel))
+                            except Exception:
+                                pass
+                continue
+            h = _content_fingerprint_hash(path) if getattr(args, "by_content", False) else teitok_text_fingerprint_hash(path)
+            if h is not None:
+                hash_to_files.setdefault(h, []).append(rel)
+                if getattr(args, "verbose", False):
+                    print(h + "\t" + rel)
+                if conn is not None:
+                    try:
+                        conn.execute("INSERT INTO dedup_index (hash, filename) VALUES (?, ?)", (h, rel))
+                    except Exception:
+                        pass
+            if near_identical and conn is not None:
+                text = _normalized_text_for_path(path, getattr(args, "by_content", False))
+                if text:
+                    shingles = shingle_text(text)
+                    if shingles:
+                        sig = minhash_signature(shingles)
+                        try:
+                            mtime = os.path.getmtime(path) if os.path.exists(path) else 0
+                            size = os.path.getsize(path) if os.path.exists(path) else 0
+                            conn.execute("DELETE FROM near_dup_sigs WHERE path = ?", (rel,))
+                            conn.execute("DELETE FROM near_dup_lsh WHERE path = ?", (rel,))
+                            conn.execute(
+                                "INSERT OR REPLACE INTO near_dup_sigs (path, mtime, size, sig) VALUES (?, ?, ?, ?)",
+                                (rel, mtime, size, signature_to_blob(sig)),
+                            )
+                            for band_id, bucket in lsh_bands(sig):
+                                conn.execute("INSERT OR REPLACE INTO near_dup_lsh (band_id, bucket, path) VALUES (?, ?, ?)", (band_id, bucket, rel))
+                        except Exception:
+                            pass
+        if conn is not None and incremental:
+            try:
+                meta_paths = set(row[0] for row in conn.execute("SELECT path FROM dedup_meta").fetchall())
+                to_remove = meta_paths - current_rels
+                for batch in _chunks(sorted(to_remove), 5000):
+                    placeholders = ",".join(["?"] * len(batch))
+                    conn.execute("DELETE FROM dedup_meta WHERE path IN (" + placeholders + ")", batch)
+                    conn.execute("DELETE FROM dedup_index WHERE filename IN (" + placeholders + ")", batch)
+                    if near_identical:
+                        conn.execute("DELETE FROM near_dup_sigs WHERE path IN (" + placeholders + ")", batch)
+                        conn.execute("DELETE FROM near_dup_lsh WHERE path IN (" + placeholders + ")", batch)
+            except Exception:
+                pass
+        if conn is not None:
+            try:
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+        # Always report duplicate groups (build index only when --index; report in both cases)
+        index_groups: List[List[str]] = [sorted(files) for files in hash_to_files.values() if len(files) > 1]
+        if getattr(args, "json", False):
+            print(json.dumps(index_groups, indent=2))
+            return 0 if not index_groups else 1
+        for g in index_groups:
+            print("Duplicate set (%d files):" % len(g))
+            for fn in g:
+                print("  ", fn)
+            print()
+        return 0 if not index_groups else 1
+    if getattr(args, "by_content", False):
+        hash_to_paths_list: Dict[str, List[str]] = {}
+        show_progress = not getattr(args, "json", False) and not getattr(args, "quiet", False)
+        for path in _progress_iter(paths, len(paths), "files", enabled=show_progress):
+            h = _content_fingerprint_hash(path)
+            if h is not None:
+                hash_to_paths_list.setdefault(h, []).append(path)
+        groups = [g for g in hash_to_paths_list.values() if len(g) > 1]
+    else:
+        show_progress = not getattr(args, "json", False) and not getattr(args, "quiet", False)
+        paths_iter = _progress_iter(paths, len(paths), "files", enabled=show_progress)
+        groups = find_duplicate_teitok_files(paths_iter)
+    if args.json:
+        # Output relative paths in JSON when we have a common base
+        if base_for_display and groups:
+            groups_for_json = [[_path_relative_to_base(p, base_for_display) for p in g] for g in groups]
+        else:
+            groups_for_json = groups
+        print(json.dumps(groups_for_json, indent=2))
+        return 0 if not groups else 1
+    for g in groups:
+        print("Duplicate set (%d files):" % len(g))
+        for path in sorted(g):
+            print("  ", _path_relative_to_base(path, base_for_display))
+        print()
+    return 0 if not groups else 1
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     _register_builtin_formats()
 
@@ -1127,14 +1649,14 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     # Global --list-formats shortcut, mirroring flexipipe-style UX
     if "--list-formats" in argv and not any(
-        cmd in argv for cmd in ("info", "install", "update", "convert")
+        cmd in argv for cmd in ("info", "install", "update", "convert", "duplicates")
     ):
         info_argv = ["formats"]
         if "--json" in argv:
             info_argv.append("--json")
         return _cmd_info(info_argv)
 
-    # Subcommands: flexiconv info|install|update|convert ...
+    # Subcommands: flexiconv info|install|update|convert|duplicates ...
     if argv:
         cmd = argv[0]
         rest = argv[1:]
@@ -1146,6 +1668,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             return _cmd_update(rest)
         if cmd == "convert":
             return _cmd_convert(rest)
+        if cmd == "duplicates":
+            return _cmd_duplicates(rest)
 
     # Default: convert INPUT [OUTPUT]
     return _run_convert(_make_convert_parser("flexiconv"), argv)

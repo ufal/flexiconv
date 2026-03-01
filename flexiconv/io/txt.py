@@ -120,25 +120,21 @@ def _text_of_el(el: etree._Element) -> str:
     return "".join(parts)
 
 
-def save_txt(
+def document_to_plain_text(
     document: Document,
-    path: str,
     *,
     linebreaks: LinebreaksMode = "paragraph",
-) -> None:
+) -> str:
     """
-    Export a pivot Document to plain text.
+    Extract plain text from a pivot Document (same logic as save_txt, but returns a string).
 
-    linebreaks:
-      - "sentence": one line per sentence (from sentences layer, or from structure).
-      - "paragraph": one line per structure node.
-      - "double": structure nodes joined by blank lines (each node's text can contain \\n).
+    Used for content-based fingerprinting so that RTF, DOCX, TEITOK XML, etc. can be
+    compared by their converted text.
     """
     structure = document.layers.get("structure")
     sentences_layer = document.layers.get("sentences")
     lines: list[str] = []
 
-    # DOCX (and similar) store a TEI tree in meta; extract body paragraphs as lines.
     tei_root = document.meta.get("_teitok_tei_root")
     if tei_root is not None:
         body = tei_root.find(".//body")
@@ -162,11 +158,50 @@ def save_txt(
                 key=lambda n: (n.anchors[0].char_start if n.anchors and n.anchors[0].char_start is not None else 0, n.id),
             )
             lines = [str(n.features.get("text", "")) for n in s_nodes]
+        else:
+            # Fallback: tokens or sentences as single block (e.g. TEI P5 loader has no structure / _teitok_tei_root)
+            tokens_layer = document.layers.get("tokens")
+            if tokens_layer and tokens_layer.nodes:
+                toks = sorted(
+                    tokens_layer.nodes.values(),
+                    key=lambda n: (n.anchors[0].token_start if n.anchors and n.anchors[0].token_start is not None else 0, n.id),
+                )
+                one_line = " ".join(str(n.features.get("form", "")) for n in toks)
+                if one_line.strip():
+                    lines = [one_line]
+            elif sentences_layer and sentences_layer.nodes:
+                s_nodes = sorted(
+                    sentences_layer.nodes.values(),
+                    key=lambda n: (n.anchors[0].token_start if n.anchors and n.anchors[0].token_start is not None else 0, n.id),
+                )
+                one_line = " ".join(str(n.features.get("text", "")) for n in s_nodes)
+                if one_line.strip():
+                    lines = [one_line]
 
     if linebreaks == "double":
-        content = "\n\n".join(lines)
-    else:
-        content = "\n".join(lines)
+        return "\n\n".join(lines)
+    return "\n".join(lines)
 
+
+def normalize_text_for_fingerprint(text: str) -> str:
+    """Collapse any run of whitespace to a single space and strip. For content hashing."""
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def save_txt(
+    document: Document,
+    path: str,
+    *,
+    linebreaks: LinebreaksMode = "paragraph",
+) -> None:
+    """
+    Export a pivot Document to plain text.
+
+    linebreaks:
+      - "sentence": one line per sentence (from sentences layer, or from structure).
+      - "paragraph": one line per structure node.
+      - "double": structure nodes joined by blank lines (each node's text can contain \\n).
+    """
+    content = document_to_plain_text(document, linebreaks=linebreaks)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import os
 import re
 import shutil
 from io import BytesIO
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from lxml import etree
 
@@ -37,6 +38,90 @@ def _xpath_local(root: etree._Element, local_name: str) -> list:
 
 def _is_tei(root: etree._Element) -> bool:
     return root.tag.endswith("TEI")
+
+
+# Space normalization for text fingerprint: collapse any run of whitespace to a single space, strip.
+_WHITESPACE_NORM_RE = re.compile(r"\s+")
+
+
+def teitok_text_fingerprint(
+    path: str | os.PathLike,
+    *,
+    root: Optional[etree._Element] = None,
+) -> str:
+    """Return the space-normalized inner text of the <text> node in a TEITOK/XML document.
+
+    Used for duplication detection: when two files have the same fingerprint, they are
+    considered copies (same content). This is more reliable than comparing Originals
+    references, since it compares the actual text body.
+
+    Text is normalized so that spaces inside vs outside inline elements (e.g. <hi>)
+    do not affect the fingerprint: we join all text chunks with a space, then
+    collapse runs of whitespace to a single space. Thus "hello <hi>world</hi> again"
+    and "hello<hi> world</hi>again" yield the same fingerprint.
+
+    Arguments:
+        path: Path to the TEITOK XML file (used when root is not provided).
+        root: Optional already-parsed TEI root element. If given, path is not read.
+
+    Returns:
+        Normalized string: all whitespace collapsed to single spaces, trimmed.
+
+    Raises:
+        ValueError: If the document is not TEI or has no <text> element.
+    """
+    if root is None:
+        tree = etree.parse(os.fspath(path))
+        root = tree.getroot()
+    if not _is_tei(root):
+        raise ValueError("Not a TEI document")
+    text_el = root.xpath(".//*[local-name()='text']")
+    if not text_el:
+        raise ValueError("TEI document has no <text> element")
+    # Join text chunks with a space so that space inside vs outside elements (e.g. <hi>)
+    # does not change the fingerprint; then collapse runs of whitespace.
+    inner_text = " ".join(text_el[0].itertext())
+    return _WHITESPACE_NORM_RE.sub(" ", inner_text).strip()
+
+
+def find_duplicate_teitok_files(
+    paths: Iterable[str | os.PathLike],
+) -> list[list[str]]:
+    """Group TEITOK XML paths by (space-normalized) <text> content; return duplicate groups.
+
+    Two files are considered duplicates when the inner text of their <text> element
+    is the same after normalizing whitespace (collapse runs to single space, strip).
+    This is intended to replace Originals-based duplication detection.
+
+    Arguments:
+        paths: Iterable of paths to TEITOK XML files.
+
+    Returns:
+        List of groups; each group is a list of paths that share the same text content.
+        Only groups with at least two files are returned. Order within each group
+        is arbitrary; groups are in no particular order.
+    """
+    fingerprint_to_paths: dict[str, list[str]] = {}
+    for p in paths:
+        path_str = os.fspath(p)
+        try:
+            fp = teitok_text_fingerprint(path_str)
+        except (ValueError, OSError, etree.XMLSyntaxError):
+            continue
+        fingerprint_to_paths.setdefault(fp, []).append(path_str)
+    return [g for g in fingerprint_to_paths.values() if len(g) > 1]
+
+
+def teitok_text_fingerprint_hash(path: str | os.PathLike) -> Optional[str]:
+    """Return SHA-256 hex digest of the space-normalized <text> content, or None if unreadable.
+
+    Used by easycorp and other tools to build a duplicate index without relying on Originals.
+    """
+    try:
+        fp = teitok_text_fingerprint(path)
+        return hashlib.sha256(fp.encode("utf-8")).hexdigest()
+    except (ValueError, OSError, etree.XMLSyntaxError):
+        return None
 
 
 def _write_teitok_xml(path: str, tree: etree._ElementTree, *, prettyprint: bool = False) -> None:

@@ -111,3 +111,24 @@ flexiconv info format tcf       # details for a single format
 flexiconv convert --help        # full CLI reference
 ```
 
+## Deduplication
+
+Flexiconv can find **exact** and **near-identical** duplicates among documents (TEITOK XML or any supported format with `--by-content`). You can build a SQLite index (with optional incremental updates) and list duplicate groups for cleanup or to avoid re-ingesting the same content.
+
+```bash
+# List exact duplicates from default index (inside a TEITOK project)
+flexiconv duplicates
+
+# Scan folders (all supported formats), report duplicate groups
+flexiconv duplicates tmp examples --by-content
+
+# Build index and optionally enable near-identical detection
+flexiconv duplicates --index --output tmp/deduplication.sqlite --near-identical
+
+# List near-identical groups; JSON output for scripts (e.g. TEITOK)
+flexiconv duplicates --from-index tmp/deduplication.sqlite --near-identical --json --quiet
+```
+
+See [Deduplication](Deduplication.md) for full details: exact vs near-identical, index format, incremental updates, cross-format comparison, and progress/quiet behaviour.
+
+
