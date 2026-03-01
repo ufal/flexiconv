@@ -104,6 +104,16 @@ def run_convert(
             stem, _ = os.path.splitext(base)
             ext = _default_ext_for_format(to_format or "")
             output_path = os.path.join(output_path, stem + ext)
+        elif not os.path.exists(output_path) and not os.path.splitext(os.path.basename(output_path))[1]:
+            os.makedirs(output_path, exist_ok=True)
+            base = os.path.basename(input_path)
+            stem, _ = os.path.splitext(base)
+            ext = _default_ext_for_format(to_format or "")
+            output_path = os.path.join(output_path, stem + ext)
+        # Ensure parent directory exists (e.g. default ~/Flexiconv)
+        parent_dir = os.path.dirname(output_path)
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
 
     if progress_callback:
         progress_callback(0, 1, "Detecting format...")
