@@ -20,9 +20,12 @@ Use `flexiconv info formats` for the authoritative, runtime view.
 
 - [RTF (`rtf`)](Format-rtf.md)
 - [Word DOCX (`docx`)](Format-docx.md)
+- [OpenDocument Text ODT (`odt`)](Format-odt.md)
+- [PDF (`pdf`)](Format-pdf.md)
 - [HTML (`html`)](Format-html.md)
 - [Markdown (`md`)](Format-md.md)
 - [Plain text (`txt`)](Format-txt.md)
+- [EPUB (`epub`)](Format-epub.md)
 
 ## Spoken corpora and transcripts
 

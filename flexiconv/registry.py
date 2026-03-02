@@ -17,6 +17,9 @@ class InputFormat:
     aliases: tuple[str, ...]
     loader: Callable[..., Document]
     description: str = ""
+    # Coarse document-type label (e.g. 'richtext', 'tei/pivot', 'ocr', ...).
+    # Used by the CLI to group and describe formats.
+    data_type: str = "other"
 
     def matches(self, value: str) -> bool:
         v = value.lower()
@@ -29,6 +32,8 @@ class OutputFormat:
     aliases: tuple[str, ...]
     saver: Callable[..., None]
     description: str = ""
+    # Coarse document-type label (e.g. 'richtext', 'tei/pivot', 'ocr', ...).
+    data_type: str = "other"
     # Names of layers this output format knows how to export.
     # Used only for verbose lossiness reporting in the CLI.
     supported_layers: tuple[str, ...] = ()

@@ -25,7 +25,7 @@ This is a paragraph with *emphasis* and **strong** text.
 - **Reading (`md` input)**:
   - Markdown is converted to HTML, then passed through the HTML importer.
   - Headings, paragraphs, lists, and code blocks become `structure` nodes and TEI block elements.
-  - Text is tokenised into `<tok>` and sentences, suitable for downstream processing.
+  - Text is imported as structural blocks; tokenisation and sentence splitting are intentionally left to downstream tools (e.g. flexipipe).
 
 - **Writing (`md` output)**:
   - Not a primary output format; use `txt`, `html`, or `tei` / `teitok` for exporting.

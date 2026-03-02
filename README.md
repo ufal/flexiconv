@@ -5,15 +5,15 @@ Flexiconv is a **Python library, CLI, and desktop GUI** for converting between m
 Supported input families include:
 
 - **TEI / TEITOK** (`teitok`, `tei`)
-- **Rich text / documents** (`rtf`, `docx`, `html`, `md`, `txt`)
-- **Spoken corpora** (`eaf`, `textgrid`, `exb`, `trs`, `chat`, `srt`, `doreco`)
+- **Rich text / documents** (`rtf`, `docx`, `pdf`, `odt`, `html`, `md`, `txt`, `epub`)
+- **Spoken corpora / oral transcription** (`eaf`, `textgrid`, `exb`, `trs`, `chat`, `srt`, `doreco`)
 - **OCR / page layout** (`hocr`, `pagexml`, `alto`)
-- **Treebanks and corpora** (`conllu`, `tcf`, `vert`, `tmx`, `tbt`, `folia`, `brat`)
+- **Treebanks and corpora / stand-off annotation** (`conllu`, `tcf`, `vert`, `tmx`, `tbt`, `folia`, `brat`, `webanno`)
 
 All conversions go via:
 
-- A **pivot model** in `flexiconv.core` (tokens, sentences, layers, anchors).
-- A **TEITOK-style TEI** representation (`flexiconv.io.teitok_xml`) that mirrors the conventions of `teitok-tools`.
+- A **pivot model** in `flexiconv.core` (layers, anchors, nodes, spans) that can represent crossing annotations.
+- A **TEITOK-style TEI** representation (`flexiconv.io.teitok_xml`) that mirrors the conventions of `teitok-tools` and acts as a TEI/XML view of the pivot.
 
 ### Install
 
@@ -23,10 +23,10 @@ Install from GitHub (requires Git):
 pip install 'git+https://github.com/ufal/flexiconv'
 ```
 
-To install optional extras (RTF, DOCX, Markdown support):
+To install optional extras (RTF, DOCX, ODT, Markdown, PDF support):
 
 ```bash
-pip install 'git+https://github.com/ufal/flexiconv#egg=flexiconv[rtf,docx,md]'
+pip install 'git+https://github.com/ufal/flexiconv#egg=flexiconv[rtf,docx,odt,md,pdf]'
 ```
 
 For development, use an editable install from a clone:

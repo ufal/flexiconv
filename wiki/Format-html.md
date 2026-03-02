@@ -27,9 +27,9 @@ Handled by `flexiconv/io/html.py`.
 ## Conversion semantics
 
 - **Reading (`html` input)**:
-  - Block-level elements (`<p>`, headings, list items) become `structure` nodes and TEI `<p>/<head>/<list>` etc.
-  - Text content is tokenised into `<tok>` and grouped into sentences where appropriate.
-  - Inline markup (e.g. `<em>`, `<strong>`) can be reflected as TEI inline elements or span layers.
+  - Block-level elements (`<p>`, headings, list items, blockquotes, divs) become `structure` nodes and TEI `<p>/<head>/<list>` etc.
+  - Text content is imported as plain text paragraphs/headings; tokenisation and sentence splitting are intentionally left to downstream tools (e.g. flexipipe).
+  - Inline markup (e.g. `<em>`, `<strong>`) is currently ignored by the HTML loader; use downstream processing to reconstruct inline annotation if needed.
 
 - **Writing (`html` output)**:
   - The `html` output format writes a **simple HTML view**:

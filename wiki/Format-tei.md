@@ -3,7 +3,7 @@
 ## Tool and format
 
 - **Format**: [TEI](https://tei-c.org/) (Text Encoding Initiative) P5 guidelines; generic XML for scholarly text.
-- **Full format name**: TEI P5 (XML); elements such as `text`, `body`, `p`, `s`, `w`, `pc`.
+- **Full format name**: TEI P5 (XML); elements such as `text`, `body`, `p`, `s`, `w`, `pc`. Flexiconv also accepts `<tok>` when present in TEITOK-like TEI, but that is not part of core TEI P5.
 - **Format specification**: [TEI P5 Guidelines](https://tei-c.org/release/doc/tei-p5-doc/en/html/). Flexiconv uses a simple mapping (e.g. `<w>` → tokens, `<s>` → sentences); no full TEI profile.
 
 ## Origin and purpose

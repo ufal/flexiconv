@@ -116,6 +116,7 @@ def _register_builtin_formats() -> None:
             aliases=("tt",),
             loader=load_teitok,
             description="TEITOK-style TEI/XML with <tok> tokens and rich token attributes.",
+            data_type="tei/pivot",
         )
     )
     registry.register_input(
@@ -123,7 +124,8 @@ def _register_builtin_formats() -> None:
             name="tei",
             aliases=("tei-p5",),
             loader=load_tei_p5,
-            description="Generic TEI P5 documents (tokens via <w> or <tok>, sentences via <s>).",
+            description="Generic TEI P5 documents (tokens via <w> (and <tok> when present), sentences via <s>).",
+            data_type="tei/pivot",
         )
     )
     registry.register_input(
@@ -132,6 +134,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=load_rtf,
             description="Rich Text Format; imported as plain text with simple line-based sentences.",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -140,6 +143,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.html", "load_html"),
             description="HTML; imported as paragraph-like blocks in a 'structure' layer (no tokens).",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -148,6 +152,7 @@ def _register_builtin_formats() -> None:
             aliases=("word",),
             loader=_lazy_loader("flexiconv.io.docx", "load_docx"),
             description="Word DOCX; converted to TEITOK-style TEI (styles, tables, images, links, footnotes).",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -156,6 +161,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.pdf", "load_pdf"),
             description="PDF; best-effort text and image extraction into TEITOK-style TEI.",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -164,6 +170,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.odt", "load_odt"),
             description="OpenDocument Text (ODT); converted to TEITOK-style TEI with plain-text paragraphs.",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -172,6 +179,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.epub", "load_epub"),
             description="EPUB; XHTML chapters converted to TEITOK-style TEI with head/p/list/table/hi.",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -180,6 +188,7 @@ def _register_builtin_formats() -> None:
             aliases=("text", "plain"),
             loader=_lazy_loader("flexiconv.io.txt", "load_txt"),
             description="Plain text; line-break meaning set by --linebreaks (sentence, paragraph, double).",
+            data_type="plain",
         )
     )
     registry.register_input(
@@ -188,6 +197,7 @@ def _register_builtin_formats() -> None:
             aliases=("markdown",),
             loader=_lazy_loader("flexiconv.io.md", "load_md"),
             description="Markdown; converted to structure (paragraphs, headings, lists) via HTML extraction.",
+            data_type="richtext",
         )
     )
     registry.register_input(
@@ -196,6 +206,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.hocr", "load_hocr"),
             description="hOCR (HTML with ocr_page/ocr_line/ocrx_word); converted to TEITOK-style TEI with bbox.",
+            data_type="ocr",
         )
     )
     registry.register_input(
@@ -204,6 +215,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.page_xml", "load_page_xml"),
             description="PAGE XML (PcGts); converted to TEITOK-style TEI with facsimile/zones and bbox.",
+            data_type="ocr",
         )
     )
     registry.register_input(
@@ -212,6 +224,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.alto", "load_alto"),
             description="ALTO XML; converted to TEITOK-style TEI with facsimile/zones and bbox, similar to PAGE XML.",
+            data_type="ocr",
         )
     )
     registry.register_input(
@@ -220,6 +233,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.srt", "load_srt"),
             description="SRT subtitles; converted to TEITOK-style TEI with <u start/end> and an audio recordingStmt.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -228,6 +242,7 @@ def _register_builtin_formats() -> None:
             aliases=("elan",),
             loader=_lazy_loader("flexiconv.io.eaf", "load_eaf"),
             description="ELAN EAF; converted to TEITOK-style TEI with time-aligned <u> utterances and audio recordingStmt.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -236,6 +251,7 @@ def _register_builtin_formats() -> None:
             aliases=("praat", "trs-praat"),
             loader=_lazy_loader("flexiconv.io.textgrid", "load_textgrid"),
             description="Praat TextGrid; converted to TEITOK-style TEI with <u start/end who> and recordingStmt.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -244,6 +260,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.doreco", "load_doreco"),
             description="DoReCo-specific ELAN EAF; converted with DoReCo tier mappings into TEITOK-style TEI.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -252,6 +269,7 @@ def _register_builtin_formats() -> None:
             aliases=("exmaralda",),
             loader=_lazy_loader("flexiconv.io.exb", "load_exb"),
             description="EXMARaLDA basic transcription (.exb) to TEITOK-style TEI with time-aligned <u>.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -260,6 +278,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.chat", "load_chat"),
             description="CHAT/CHILDES transcripts (.cha) converted to TEI/TEITOK <u>/<note> structure.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -268,6 +287,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.tmx", "load_tmx"),
             description="TMX translation memories; TEI with <div lang>/<ab tuid> alignment blocks.",
+            data_type="translation",
         )
     )
     registry.register_input(
@@ -276,6 +296,7 @@ def _register_builtin_formats() -> None:
             aliases=("conll-u",),
             loader=_lazy_loader("flexiconv.io.conllu", "load_conllu"),
             description="CoNLL-U; UD-style sentences/tokens with standardized metadata in comments.",
+            data_type="treebank",
         )
     )
     registry.register_input(
@@ -284,6 +305,7 @@ def _register_builtin_formats() -> None:
             aliases=("toolbox",),
             loader=_lazy_loader("flexiconv.io.tbt", "load_tbt"),
             description="Toolbox (TBT) interlinear text; converted to TEITOK-style TEI with <s>/<tok>/<morph>.",
+            data_type="igt",
         )
     )
     registry.register_input(
@@ -292,6 +314,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.tcf", "load_tcf"),
             description="TCF (Text Corpus Format, D-Spin/WebLicht); converted to TEITOK-style TEI with <s>/<tok>, lemma, pos, deps, <name>.",
+            data_type="corpus",
         )
     )
     registry.register_input(
@@ -300,6 +323,7 @@ def _register_builtin_formats() -> None:
             aliases=("transcriber",),
             loader=_lazy_loader("flexiconv.io.trs", "load_trs"),
             description="Transcriber TRS; converted to TEITOK-style TEI with <ab>/<ug>/<u start end who>/<tok start end> and recordingStmt.",
+            data_type="oral/transcription",
         )
     )
     registry.register_input(
@@ -308,6 +332,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.brat", "load_brat"),
             description="Brat stand-off (.ann + .txt); converted to TEITOK-style TEI with <tok idx> and standOff <span>/<link> elements.",
+            data_type="stand-off annotations",
         )
     )
     registry.register_input(
@@ -316,6 +341,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.folia", "load_folia"),
             description="FoLiA (Format for Linguistic Annotation); converted to TEITOK-style TEI with <s>/<tok>, lemma, pos, head, deprel.",
+            data_type="corpus",
         )
     )
     registry.register_input(
@@ -324,6 +350,7 @@ def _register_builtin_formats() -> None:
             aliases=("vrt",),
             loader=_lazy_loader("flexiconv.io.vert", "load_vert"),
             description="Vertical/VRT corpora; converted to TEITOK-style TEI with <div>/<s>/<tok> and heuristic spacing.",
+            data_type="corpus",
         )
     )
     registry.register_input(
@@ -332,6 +359,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.webanno", "load_webanno"),
             description="WebAnno TSV (e.g. INCEpTION export); converted to TEITOK-style TEI with <s>/<tok> and standOff <spanGrp>.",
+            data_type="stand-off annotations",
         )
     )
 
@@ -341,6 +369,7 @@ def _register_builtin_formats() -> None:
             aliases=("tt",),
             saver=save_teitok,
             description="Write a minimal TEITOK-style TEI with <tok> tokens and <s> sentences.",
+            data_type="tei/pivot",
             supported_layers=("tokens", "sentences", "structure", "rendition"),
         )
     )
@@ -350,6 +379,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             saver=_lazy_loader("flexiconv.io.hocr", "save_hocr"),
             description="hOCR (from TEI with bbox or future FPM); supports round-trip hOCR→TEI→hOCR.",
+            data_type="ocr",
             supported_layers=("tokens", "structure"),
         )
     )
@@ -359,6 +389,7 @@ def _register_builtin_formats() -> None:
             aliases=("tei-p5",),
             saver=save_tei_p5,
             description="Write simple TEI P5 with <w> tokens and <s> sentences (or plain <p> from structure).",
+            data_type="tei/pivot",
             supported_layers=("tokens", "sentences", "structure"),
         )
     )
@@ -368,6 +399,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             saver=_lazy_loader("flexiconv.io.raw", "save_raw"),
             description="Dump the pivot Document (meta, layers, nodes) as a plain-text report.",
+            data_type="other",
             supported_layers=None,
         )
     )
@@ -377,6 +409,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             saver=save_rtf,
             description="Write a text-only RTF; each sentence becomes one paragraph.",
+            data_type="richtext",
             supported_layers=("tokens", "sentences"),
         )
     )
@@ -386,6 +419,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             saver=_lazy_saver("flexiconv.io.html", "save_html"),
             description="Write simple HTML with one <p> per paragraph (and spans for inline styles when available).",
+            data_type="richtext",
             supported_layers=("tokens", "sentences", "structure", "rendition"),
         )
     )
@@ -395,6 +429,7 @@ def _register_builtin_formats() -> None:
             aliases=("text", "plain"),
             saver=_lazy_saver("flexiconv.io.txt", "save_txt"),
             description="Plain text; one line per sentence/paragraph or blocks separated by blank lines (--linebreaks).",
+            data_type="plain",
             supported_layers=("tokens", "sentences", "structure"),
         )
     )
@@ -404,6 +439,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             saver=_lazy_saver("flexiconv.io.srt", "save_srt"),
             description="SRT subtitles from TEI <u start/end> or an 'utterances' layer with TIME anchors.",
+            data_type="oral/transcription",
             supported_layers=("utterances",),
         )
     )
@@ -413,6 +449,7 @@ def _register_builtin_formats() -> None:
             aliases=("conll-u",),
             saver=_lazy_saver("flexiconv.io.conllu", "save_conllu"),
             description="CoNLL-U with standardized file/sentence metadata and SpaceAfter=No from space_after.",
+            data_type="treebank",
             supported_layers=("tokens", "sentences"),
         )
     )
@@ -422,6 +459,7 @@ def _register_builtin_formats() -> None:
             aliases=(),
             saver=_lazy_saver("flexiconv.io.doreco", "save_doreco"),
             description="DoReCo-style ELAN EAF from TEITOK DoReCo TEI (<u>/<tok>/<m>).",
+            data_type="oral/transcription",
             supported_layers=(),
         )
     )
@@ -431,6 +469,7 @@ def _register_builtin_formats() -> None:
             aliases=("exmaralda",),
             saver=_lazy_saver("flexiconv.io.exb", "save_exb"),
             description="EXMARaLDA basic transcription from TEITOK TEI with time-aligned <u>.",
+            data_type="oral/transcription",
             supported_layers=("utterances",),
         )
     )
@@ -510,11 +549,11 @@ def _cmd_info(argv: list[str]) -> int:
     )
     args = parser.parse_args(argv)
 
-    def _format_to_json(fmt: InputFormat | OutputFormat, dtype: str) -> Dict[str, Any]:
+    def _format_to_json(fmt: InputFormat | OutputFormat) -> Dict[str, Any]:
         out: Dict[str, Any] = {
             "name": fmt.name,
             "aliases": list(fmt.aliases),
-            "data_type": dtype,
+            "data_type": getattr(fmt, "data_type", "") or _format_data_type(fmt.name),
             "description": fmt.description or "",
         }
         if isinstance(fmt, OutputFormat) and getattr(fmt, "supported_layers", ()):
@@ -528,14 +567,14 @@ def _cmd_info(argv: list[str]) -> int:
             if fmt.name in seen_in:
                 continue
             seen_in.add(fmt.name)
-            input_list.append(_format_to_json(fmt, _format_data_type(fmt.name)))
+            input_list.append(_format_to_json(fmt))
         output_list: List[Dict[str, Any]] = []
         seen_out = set()
         for key, fmt in registry._outputs.items():  # type: ignore[attr-defined]
             if fmt.name in seen_out:
                 continue
             seen_out.add(fmt.name)
-            output_list.append(_format_to_json(fmt, _format_data_type(fmt.name)))
+            output_list.append(_format_to_json(fmt))
         if args.json:
             print(json.dumps({"input": input_list, "output": output_list}, indent=2))
             return 0
@@ -581,8 +620,8 @@ def _cmd_info(argv: list[str]) -> int:
             parser.error(f"Unknown format: {name}")
         if args.json:
             payload: Dict[str, Any] = {
-                "input": _format_to_json(fmt_in, _format_data_type(fmt_in.name)) if fmt_in else None,
-                "output": _format_to_json(fmt_out, _format_data_type(fmt_out.name)) if fmt_out else None,
+                "input": _format_to_json(fmt_in) if fmt_in else None,
+                "output": _format_to_json(fmt_out) if fmt_out else None,
             }
             print(json.dumps(payload, indent=2))
             return 0
