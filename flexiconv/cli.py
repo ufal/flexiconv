@@ -310,6 +310,15 @@ def _register_builtin_formats() -> None:
     )
     registry.register_input(
         InputFormat(
+            name="flex",
+            aliases=("flextext",),
+            loader=_lazy_loader("flexiconv.io.flex", "load_flex"),
+            description="FLEx (FieldWorks) FLExText interlinear; converted to TEITOK-style TEI with <s>/<tok>/<m>.",
+            data_type="igt",
+        )
+    )
+    registry.register_input(
+        InputFormat(
             name="tcf",
             aliases=(),
             loader=_lazy_loader("flexiconv.io.tcf", "load_tcf"),
@@ -500,7 +509,7 @@ def _format_data_type(fmt_name: str) -> str:
         return "translation"
     if name in {"conllu"}:
         return "treebank"
-    if name in {"tbt"}:
+    if name in {"tbt", "flex"}:
         return "igt"
     if name in {"tcf", "folia", "vert"}:
         return "corpus"

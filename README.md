@@ -62,7 +62,7 @@ A **standalone desktop GUI** is available for conversion and (planned) deduplica
 
 ### Documentation
 
-- **Pivot model and mapping design**: see `dev/PIVOT_FORMAT.md` and `dev/FORMATS_AND_MAPPINGS.md`.
+- **Pivot model and mapping design**: see `examples/md/FORMATS_AND_MAPPINGS.md`; the pivot is implemented in `flexiconv.core.model` and reflected in the format pages under `wiki/`.
 - **Deduplication**: exact and near-identical duplicate detection, SQLite index, incremental and cross-format — see `wiki/Deduplication.md`.
 - **User-oriented docs and format pages**: see the `wiki/` folder; `wiki/README.md` is the index. Each supported format has a short page with:
   - Origin and typical use

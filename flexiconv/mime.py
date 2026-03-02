@@ -121,6 +121,7 @@ _EXT_TO_INPUT = {
     ".cha": "chat",
     ".tbt": "tbt",
     ".tbtx": "tbt",
+    ".flextext": "flex",
     ".tcf": "tcf",
     ".trs": "trs",
     ".vrt": "vert",
@@ -190,6 +191,11 @@ def path_to_input_format(path: str) -> Optional[str]:
         # FoLiA (Format for Linguistic Annotation)
         if "<folia" in lowered:
             return "folia"
+        # FLEx FLExText interlinear (and FlexInterlinear <document> wrapper)
+        if "<interlinear-text" in lowered:
+            return "flex"
+        if "<document" in lowered and ("interlinear-text" in lowered or "flexinterlinear" in lowered):
+            return "flex"
         # TEI / TEITOK (fall back to TEITOK when <tok> present)
         return "teitok" if "<tok" in snippet else "tei"
 

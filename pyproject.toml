@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flexiconv"
-version = "0.3.4"
+version = "0.3.5"
 description = "Flexible corpus and document converter with a TEI/TEITOK-compatible pivot format."
 authors = [
   { name = "Maarten Janssen" }

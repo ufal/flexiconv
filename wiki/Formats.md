@@ -53,6 +53,7 @@ Use `flexiconv info formats` for the authoritative, runtime view.
 - [BRAT stand-off (`brat`)](Format-brat.md)
 - [WebAnno TSV (`webanno`)](Format-webanno.md)
 - [Toolbox interlinear (`tbt`)](Format-tbt.md)
+- [FLEx FLExText interlinear (`flex`)](Format-flex.md)
 
 Each page describes both directions where applicable (e.g. read-only vs read/write), and points to the corresponding I/O module under `flexiconv/io/`.
 
