@@ -203,8 +203,9 @@ def _process_paragraph(
     footnote_map: dict[str, str],
     image_reldir: str,
     run_map: dict,
+    tag: str = "p",
 ) -> Optional[etree._Element]:
-    p_elem = etree.Element("p")
+    p_elem = etree.Element(tag)
     p_elem.tail = "\n"
     para_style = _paragraph_to_css(para)
     if para_style:
@@ -382,24 +383,69 @@ def docx_to_tei_tree(
     para_map = {p._element: p for p in doc.paragraphs}
     table_map = {t._element: t for t in doc.tables}
 
+    def _is_list_paragraph(para: Any) -> bool:
+        """Return True if this paragraph is part of a list (bulleted/numbered)."""
+        pPr = getattr(para._p, "pPr", None)
+        if pPr is not None and getattr(pPr, "numPr", None) is not None:
+            return True
+        name = (getattr(para.style, "name", "") or "").lower()
+        return "list" in name or "bullet" in name or "number" in name
+
+    current_list: Optional[etree._Element] = None
+
     for elem in doc._element.findall(".//w:body/*", namespaces=NAMESPACES):
         tag = _get_tag(elem)
         processed = None
         if tag == "p":
             para = para_map.get(elem)
             if para is not None:
+                is_list = _is_list_paragraph(para)
                 run_map = {r._element: r for r in para.runs}
-                processed = _process_paragraph(
-                    para, image_map, hyperlink_map, footnote_map, image_reldir, run_map
+                # First paragraph in the document that is not a list and uses a
+                # title/heading style becomes a <head>.
+                style_name = (getattr(para.style, "name", "") or "").lower()
+                want_head = (
+                    not is_list
+                    and len(body) == 0
+                    and ("title" in style_name or style_name.startswith("heading"))
                 )
+                processed = _process_paragraph(
+                    para,
+                    image_map,
+                    hyperlink_map,
+                    footnote_map,
+                    image_reldir,
+                    run_map,
+                    tag="head" if want_head else "p",
+                )
+                if processed is not None:
+                    if is_list:
+                        if current_list is None:
+                            current_list = etree.SubElement(body, "list")
+                        item = etree.SubElement(current_list, "item")
+                        # Move children of processed <p> directly under <item>
+                        # so <item> contains the text/hi structure without an extra <p>.
+                        for child in list(processed):
+                            processed.remove(child)
+                            item.append(child)
+                        if processed.text:
+                            if len(item) == 0:
+                                item.text = processed.text
+                            else:
+                                # Append as tail of last child
+                                item[-1].tail = (item[-1].tail or "") + processed.text
+                    else:
+                        current_list = None
+                        body.append(processed)
         elif tag == "tbl":
+            current_list = None
             table = table_map.get(elem)
             if table is not None:
                 processed = _process_table(
                     table, image_map, hyperlink_map, footnote_map, image_reldir
                 )
-        if processed is not None:
-            body.append(processed)
+                if processed is not None:
+                    body.append(processed)
 
     return tei, image_dir
 

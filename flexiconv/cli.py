@@ -85,6 +85,7 @@ _FMT_DEFAULT_EXT = {
     "srt": ".srt",
     "doreco": ".eaf",
     "exb": ".exb",
+    "raw": ".raw",
 }
 
 
@@ -147,6 +148,30 @@ def _register_builtin_formats() -> None:
             aliases=("word",),
             loader=_lazy_loader("flexiconv.io.docx", "load_docx"),
             description="Word DOCX; converted to TEITOK-style TEI (styles, tables, images, links, footnotes).",
+        )
+    )
+    registry.register_input(
+        InputFormat(
+            name="pdf",
+            aliases=(),
+            loader=_lazy_loader("flexiconv.io.pdf", "load_pdf"),
+            description="PDF; best-effort text and image extraction into TEITOK-style TEI.",
+        )
+    )
+    registry.register_input(
+        InputFormat(
+            name="odt",
+            aliases=(),
+            loader=_lazy_loader("flexiconv.io.odt", "load_odt"),
+            description="OpenDocument Text (ODT); converted to TEITOK-style TEI with plain-text paragraphs.",
+        )
+    )
+    registry.register_input(
+        InputFormat(
+            name="epub",
+            aliases=(),
+            loader=_lazy_loader("flexiconv.io.epub", "load_epub"),
+            description="EPUB; XHTML chapters converted to TEITOK-style TEI with head/p/list/table/hi.",
         )
     )
     registry.register_input(
@@ -339,6 +364,15 @@ def _register_builtin_formats() -> None:
     )
     registry.register_output(
         OutputFormat(
+            name="raw",
+            aliases=(),
+            saver=_lazy_loader("flexiconv.io.raw", "save_raw"),
+            description="Dump the pivot Document (meta, layers, nodes) as a plain-text report.",
+            supported_layers=None,
+        )
+    )
+    registry.register_output(
+        OutputFormat(
             name="rtf",
             aliases=(),
             saver=save_rtf,
@@ -415,16 +449,14 @@ def _format_data_type(fmt_name: str) -> str:
     name = (fmt_name or "").lower()
     if name in {"teitok", "tei"}:
         return "tei/pivot"
-    if name in {"rtf", "docx", "html", "md"}:
+    if name in {"rtf", "docx", "html", "md", "pdf", "odt", "epub"}:
         return "richtext"
     if name in {"txt"}:
         return "plain"
     if name in {"hocr", "pagexml", "alto"}:
         return "ocr"
-    if name in {"eaf", "doreco", "textgrid", "exb", "trs", "chat"}:
+    if name in {"eaf", "doreco", "textgrid", "exb", "trs", "chat", "srt"}:
         return "oral/transcription"
-    if name in {"srt"}:
-        return "subtitles"
     if name in {"tmx"}:
         return "translation"
     if name in {"conllu"}:
@@ -436,6 +468,23 @@ def _format_data_type(fmt_name: str) -> str:
     if name in {"brat", "webanno"}:
         return "stand-off annotations"
     return "other"
+
+
+# Brief explanations for each document-type group (used by "info formats").
+FORMAT_TYPE_DESCRIPTIONS: Dict[str, str] = {
+    "tei/pivot": "Pivot document model (layers, anchors, spans) supporting crossing annotations; exported as TEI-style XML (hierarchical or stand-off).",
+    "richtext": "Document formats with rich layout and styling (headings, lists, tables, inline styles).",
+    "plain": "Unstructured plain text without markup.",
+    "ocr": "Text-recognition output for Optical Character Recognition and Handwritten Text Recognition.",
+    "oral/transcription": "Time-aligned or segment-based transcripts of spoken or multimodal content (including subtitles).",
+    "subtitles": "Subtitle and caption streams.",
+    "translation": "Parallel or aligned text segments for translation memories.",
+    "treebank": "Tokenized text with morpho-syntactic and dependency annotation.",
+    "igt": "Interlinear glossed examples with aligned tiers (object language, gloss, translation).",
+    "corpus": "Corpus containers with tokens, structural hierarchy, and annotation layers.",
+    "stand-off annotations": "Annotation formats that reference a separate primary text by offsets or IDs.",
+    "other": "Miscellaneous formats that do not fit other categories.",
+}
 
 
 def _cmd_info(argv: list[str]) -> int:
@@ -490,16 +539,36 @@ def _cmd_info(argv: list[str]) -> int:
         if args.json:
             print(json.dumps({"input": input_list, "output": output_list}, indent=2))
             return 0
-        print("Input formats:")
-        for fmt in input_list:
-            aliases = ", ".join(fmt["aliases"]) if fmt["aliases"] else "-"
-            desc = f" – {fmt['description']}" if fmt.get("description") else ""
-            print(f"  {fmt['name']} (aliases: {aliases}; type: {fmt['data_type']}){desc}")
-        print("\nOutput formats:")
-        for fmt in output_list:
-            aliases = ", ".join(fmt["aliases"]) if fmt["aliases"] else "-"
-            desc = f" – {fmt['description']}" if fmt.get("description") else ""
-            print(f"  {fmt['name']} (aliases: {aliases}; type: {fmt['data_type']}){desc}")
+
+        def _group_by_type(items: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+            grouped: Dict[str, List[Dict[str, Any]]] = {}
+            for fmt in items:
+                dtype = fmt.get("data_type") or "other"
+                grouped.setdefault(dtype, []).append(fmt)
+            return grouped
+
+        input_grouped = _group_by_type(input_list)
+        output_grouped = _group_by_type(output_list)
+
+        print("Input formats by data type:")
+        for dtype in sorted(input_grouped.keys()):
+            desc_line = FORMAT_TYPE_DESCRIPTIONS.get(dtype, "")
+            print(f"  [{dtype}] {desc_line}")
+            for fmt in sorted(input_grouped[dtype], key=lambda f: f["name"]):
+                aliases = ", ".join(fmt["aliases"]) if fmt["aliases"] else "-"
+                desc = f" – {fmt['description']}" if fmt.get("description") else ""
+                print(f"    {fmt['name']} (aliases: {aliases}){desc}")
+
+        print("\nOutput formats by data type:")
+        for dtype in sorted(output_grouped.keys()):
+            desc_line = FORMAT_TYPE_DESCRIPTIONS.get(dtype, "")
+            print(f"  [{dtype}] {desc_line}")
+            for fmt in sorted(output_grouped[dtype], key=lambda f: f["name"]):
+                aliases = ", ".join(fmt["aliases"]) if fmt["aliases"] else "-"
+                desc = f" – {fmt['description']}" if fmt.get("description") else ""
+                layers = fmt.get("supported_layers")
+                layers_str = f" [layers: {', '.join(layers)}]" if layers else ""
+                print(f"    {fmt['name']} (aliases: {aliases}){layers_str}{desc}")
         return 0
 
     if args.what == "format":

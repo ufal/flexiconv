@@ -1,6 +1,6 @@
 ## Flexiconv
 
-Flexiconv is a **Python library and CLI** for converting between many corpus and document formats via a shared, token-centric pivot representation and a TEITOK-style TEI XML target.
+Flexiconv is a **Python library, CLI, and desktop GUI** for converting between many corpus and document formats via a shared, token-centric pivot representation and a TEITOK-style TEI XML target.
 
 Supported input families include:
 

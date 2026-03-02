@@ -53,12 +53,16 @@ def mime_to_format(mime: str) -> Optional[str]:
         return "html"
     if mime in {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}:
         return "docx"
+    if mime in {"application/pdf"}:
+        return "pdf"
     if mime in {"application/exmaralda+xml"}:
         return "exb"
     if mime in {"application/x-tmx+xml"}:
         return "tmx"
     if mime in {"text/plain"}:
         return "txt"
+    if mime in {"application/epub+zip"}:
+        return "epub"
     if mime in {"text/markdown"}:
         return "md"
     if mime in {"text/praat-textgrid"}:
@@ -94,6 +98,9 @@ def describe_unsupported_mime(mime: str) -> str:
 _EXT_TO_INPUT = {
     ".rtf": "rtf",
     ".docx": "docx",
+    ".pdf": "pdf",
+    ".odt": "odt",
+    ".epub": "epub",
     ".html": "html",
     ".htm": "html",
     ".xhtml": "html",
@@ -133,7 +140,7 @@ _EXT_TO_OUTPUT = {
     ".xhtml": "html",
     ".hocr": "hocr",
     ".txt": "txt",
-    ".xml": "tei",
+    ".xml": "teitok",
     ".tei": "tei",
     ".conllu": "conllu",
     ".srt": "srt",

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flexiconv"
-version = "0.3.2"
+version = "0.3.3"
 description = "Flexible corpus and document converter with a TEI/TEITOK-compatible pivot format."
 authors = [
   { name = "Maarten Janssen" }
@@ -23,8 +23,14 @@ rtf = [
 docx = [
   "python-docx>=1.0",
 ]
+odt = [
+  "odfpy>=1.4.1",
+]
 md = [
   "markdown>=3.4",
+]
+pdf = [
+  "pdfminer.six>=20221105",
 ]
 
 [project.urls]

@@ -155,11 +155,11 @@ def _write_teitok_xml(path: str, tree: etree._ElementTree, *, prettyprint: bool 
                 if local == "tok" and el.tail == " ":
                     el.tail = " \n  "
 
-            # Flush closing tags for block-level elements (div, p, s, l) where it has no
-            # textual implications: put a newline before </blk> by adding it to the last
-            # child's tail. This prevents very long lines but does not insert spaces
-            # between tokens.
-            block_tags = {"div", "p", "s", "l"}
+            # Flush closing tags for some block-level elements (div, s, l) where it has
+            # no textual implications: put a newline before </blk> by adding it to the
+            # last child's tail. We intentionally *exclude* <p> here so that closing
+            # </p> tags stay on the same line as their content.
+            block_tags = {"div", "s", "l"}
             for blk in text_el.iter():
                 local = (blk.tag or "").split("}")[-1]
                 if local in block_tags and len(blk):
@@ -167,6 +167,39 @@ def _write_teitok_xml(path: str, tree: etree._ElementTree, *, prettyprint: bool 
                     tail = last_child.tail or ""
                     if "\n" not in tail:
                         last_child.tail = tail + "\n  "
+
+            # Put each top-level block under <body> on its own line by adding a
+            # newline to the *previous* sibling's tail. This yields:
+            #   </p>\n  <list>...
+            # rather than breaking inside the paragraph content.
+            body_el = next(
+                (c for c in text_el if (c.tag or "").split("}")[-1] == "body"), None
+            )
+            if body_el is not None and len(body_el) > 1:
+                for prev, cur in zip(body_el, list(body_el)[1:]):
+                    # Only add a newline once; avoid duplicating if already present.
+                    tail = prev.tail or ""
+                    if "\n" not in tail:
+                        prev.tail = tail + "\n  "
+
+            # Also pretty-print list items and table structure: rows and cells never
+            # share words across them, so it is safe to break lines there.
+            def _newline_between_children(parent_tag: str, child_tag: str) -> None:
+                for parent in text_el.iter():
+                    local_p = (parent.tag or "").split("}")[-1]
+                    if local_p != parent_tag or len(parent) <= 1:
+                        continue
+                    children = list(parent)
+                    for prev, cur in zip(children, children[1:]):
+                        if (cur.tag or "").split("}")[-1] != child_tag:
+                            continue
+                        tail = prev.tail or ""
+                        if "\n" not in tail:
+                            prev.tail = tail + "\n  "
+
+            _newline_between_children("list", "item")
+            _newline_between_children("table", "row")
+            _newline_between_children("row", "cell")
 
             # Ensure </text> itself is on its own line by adding a newline to the tail
             # of the last child of <text>, if not already present.
@@ -416,6 +449,27 @@ def _set_paragraph_content(
                 p_el.text = (p_el.text or "") + seg_text
 
 
+def _tidy_inline_spaces(root: etree._Element) -> None:
+    """Move trailing spaces from inline <hi> text nodes into their tails.
+
+    This normalises inline spacing so that pretty-printing can place spaces
+    *between* elements instead of inside them, without changing the logical
+    text. Applied just before writing TEITOK XML, so it affects all formats
+    that provide a TEI tree (DOCX, PDF, RTF, etc.).
+    """
+    # Find the <text> element, then operate under it only.
+    text_el = next((c for c in root if (c.tag or "").endswith("text")), None)
+    if text_el is None:
+        return
+    for hi in text_el.findall(".//hi"):
+        if hi.text and hi.text.endswith(" "):
+            hi.text = hi.text.rstrip(" ")
+            if hi.tail:
+                hi.tail = " " + hi.tail
+            else:
+                hi.tail = " "
+
+
 def _find_teitok_project_root(path: str) -> Optional[str]:
     """If path or a parent directory contains Resources/settings.xml, return that directory."""
     dirpath = os.path.dirname(os.path.abspath(path))
@@ -473,6 +527,8 @@ def save_teitok(
     # write that TEI verbatim (so DOCX→TEI output stays identical to the original converter).
     stored_tei = document.meta.get("_teitok_tei_root")
     if stored_tei is not None:
+        # Normalise inline spaces (e.g. move trailing spaces out of <hi> text).
+        _tidy_inline_spaces(stored_tei)
         tree = etree.ElementTree(stored_tei)
         _write_teitok_xml(effective_path, tree, prettyprint=prettyprint)
         return
@@ -651,6 +707,8 @@ def save_teitok(
             p_el = etree.SubElement(body_el, "p")
             _add_tokens_to_p(p_el, tokens, sentences_layer)
 
+    # Normalise inline spaces before writing.
+    _tidy_inline_spaces(tei)
     tree = etree.ElementTree(tei)
     _write_teitok_xml(effective_path, tree, prettyprint=prettyprint)
 
