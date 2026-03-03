@@ -9,7 +9,7 @@
 ## Origin and purpose
 
 - **Origin**: Toolbox (formerly Shoebox), used for interlinearised field linguistics. Data is in a text file with backslash-prefixed field names (e.g. `\tx`, `\mb`, `\gl`) and blank-line-separated records.
-- **Role in Flexiconv**: import Toolbox files into TEITOK-style TEI with `<s>`, `<tok>`, and optional `<morph>` (or tier attributes) for morphological tiers.
+- **Role in Flexiconv**: import Toolbox files into TEITOK-style TEI with `<s>`, `<tok>`, and optional `<m>` (morpheme) for morphological tiers.
 
 Handled by `flexiconv/io/tbt.py`.
 
@@ -25,12 +25,12 @@ Handled by `flexiconv/io/tbt.py`.
 \gl DET NOUN PUNCT .
 ```
 
-Flexiconv maps `\tx` to the main token line; other tiers (e.g. `\mb`, `\gl`) become morphological or attribute data on `<tok>` or `<morph>`.
+Flexiconv maps `\tx` to the main token line; other tiers (e.g. `\mb`, `\gl`) become morpheme data on `<m>` children of `<tok>`.
 
 ## Conversion semantics
 
 - **Reading (`tbt` input)**:
-  - Records are separated by blank lines. `\tx` defines the primary token sequence; other fields (e.g. `\mb`, `\gl`, `\pos`) are mapped to token attributes or `<morph tier="...">` children.
+  - Records are separated by blank lines. `\tx` defines the primary token sequence; other fields (e.g. `\mb`, `\gl`, `\pos`) are mapped to `<m>` (morpheme) children of `<tok>` with tier name as attribute name.
   - Sentence boundaries from records or structure → `<s>`.
 
 - **Writing (`tbt` output)**:

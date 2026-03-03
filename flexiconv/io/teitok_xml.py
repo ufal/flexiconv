@@ -277,6 +277,9 @@ def load_teitok(path: str, *, doc_id: Optional[str] = None) -> Document:
     if doc_id is None:
         doc_id = root.get("xml:id") or root.get("{http://www.w3.org/XML/1998/namespace}id") or path
     doc = Document(id=doc_id)
+    doc.meta["source_filename"] = os.path.basename(path)
+    # Keep the original TEI/TEITOK tree so writers (TEITOK, HTML, DOCX, etc.) can reuse it verbatim when appropriate.
+    doc.meta["_teitok_tei_root"] = root
 
     # Extract some header metadata into doc.meta (very lightly for now).
     headers = _xpath_local(root, "teiHeader")
@@ -470,6 +473,16 @@ def _tidy_inline_spaces(root: etree._Element) -> None:
                 hi.tail = " "
 
 
+def _strip_style_attributes(root: etree._Element) -> None:
+    """
+    Remove presentational style attributes (style=\"...\") from the TEI tree,
+    while keeping the structural/semantic elements (e.g. <hi>).
+    """
+    for el in root.iter():
+        if "style" in el.attrib:
+            del el.attrib["style"]
+
+
 def _find_teitok_project_root(path: str) -> Optional[str]:
     """If path or a parent directory contains Resources/settings.xml, return that directory."""
     dirpath = os.path.dirname(os.path.abspath(path))
@@ -480,6 +493,51 @@ def _find_teitok_project_root(path: str) -> Optional[str]:
     return None
 
 
+def _relocate_external_assets(document: Document, tei_root: etree._Element, effective_path: str) -> None:
+    """
+    Copy external assets (currently images) next to the TEI file in a Chrome-style
+    sidecar folder, and rewrite <graphic url="..."> to point there.
+
+    For example, saving to /path/doc.xml produces /path/doc_files/, and
+    <graphic url="..."> becomes url="doc_files/filename.png".
+    """
+    src_dir = document.meta.get("_teitok_image_dir")
+    if not src_dir or not os.path.isdir(src_dir):
+        return
+
+    base = os.path.splitext(os.path.basename(effective_path))[0] or "document"
+    assets_dir_name = f"{base}_files"
+    assets_dir = os.path.join(os.path.dirname(effective_path) or ".", assets_dir_name)
+    os.makedirs(assets_dir, exist_ok=True)
+
+    # Rewrite all <graphic url="..."> to point into assets_dir_name, and copy files.
+    for g in tei_root.xpath(".//*[local-name()='graphic']"):
+        url = g.get("url")
+        if not url:
+            continue
+        filename = os.path.basename(url)
+        if not filename:
+            continue
+        src_path = os.path.join(src_dir, filename)
+        if not os.path.isfile(src_path):
+            continue
+        dst_path = os.path.join(assets_dir, filename)
+        if not os.path.exists(dst_path):
+            try:
+                shutil.copy2(src_path, dst_path)
+            except OSError:
+                continue
+        g.set("url", os.path.join(assets_dir_name, filename))
+
+    # Best-effort cleanup for temporary image dirs we created ourselves.
+    try:
+        base_src = os.path.basename(os.path.normpath(src_dir))
+        if base_src.startswith(("flexiconv_docx_", "flexiconv_pdf_", "flexiconv_epub_")):
+            shutil.rmtree(src_dir)
+    except OSError:
+        pass
+
+
 def save_teitok(
     document: Document,
     path: str,
@@ -488,6 +546,7 @@ def save_teitok(
     copy_original_to_originals: bool = False,
     teitok_project_root: Optional[str] = None,
     prettyprint: bool = False,
+    strip_styles: bool = False,
     **kwargs: Any,
 ) -> None:
     """Write a pivot Document to TEITOK-style TEI.
@@ -503,6 +562,8 @@ def save_teitok(
             are set, copy the source file to teitok_project_root/Originals/{basename}.
         teitok_project_root: If set, write XML to project_root/xmlfiles/{basename(path)}.xml
             and optionally copy source to project_root/Originals/.
+        strip_styles: If True, drop presentational style=\"...\" attributes from the
+            TEI output (e.g. inline CSS such as text-align).
     """
     # TEITOK is namespace-off by default so lxml/libxml don't need explicit namespace registration.
     tei = etree.Element("TEI")
@@ -523,12 +584,15 @@ def save_teitok(
             orig_basename = os.path.basename(source_path)
             shutil.copy2(source_path, os.path.join(originals_dir, orig_basename))
 
-    # If this document came from DOCX (or other source that produced a full TEI tree),
-    # write that TEI verbatim (so DOCX→TEI output stays identical to the original converter).
+    # If this document came from DOCX/PDF/EPUB/etc. with a full TEI tree already
+    # built, write that TEI (after normalisation and asset relocation).
     stored_tei = document.meta.get("_teitok_tei_root")
     if stored_tei is not None:
         # Normalise inline spaces (e.g. move trailing spaces out of <hi> text).
         _tidy_inline_spaces(stored_tei)
+        if strip_styles:
+            _strip_style_attributes(stored_tei)
+        _relocate_external_assets(document, stored_tei, effective_path)
         tree = etree.ElementTree(stored_tei)
         _write_teitok_xml(effective_path, tree, prettyprint=prettyprint)
         return
@@ -707,8 +771,11 @@ def save_teitok(
             p_el = etree.SubElement(body_el, "p")
             _add_tokens_to_p(p_el, tokens, sentences_layer)
 
-    # Normalise inline spaces before writing.
+    # Normalise inline spaces and relocate any external assets (images) before writing.
     _tidy_inline_spaces(tei)
+    if strip_styles:
+        _strip_style_attributes(tei)
+    _relocate_external_assets(document, tei, effective_path)
     tree = etree.ElementTree(tei)
     _write_teitok_xml(effective_path, tree, prettyprint=prettyprint)
 

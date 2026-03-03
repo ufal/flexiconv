@@ -202,6 +202,15 @@ def _register_builtin_formats() -> None:
     )
     registry.register_input(
         InputFormat(
+            name="latex",
+            aliases=("tex",),
+            loader=_lazy_loader("flexiconv.io.latex", "load_latex"),
+            description="LaTeX source; basic sections/lists/paragraphs imported into a TEI tree (no full macro expansion yet).",
+            data_type="richtext",
+        )
+    )
+    registry.register_input(
+        InputFormat(
             name="hocr",
             aliases=(),
             loader=_lazy_loader("flexiconv.io.hocr", "load_hocr"),
@@ -304,7 +313,7 @@ def _register_builtin_formats() -> None:
             name="tbt",
             aliases=("toolbox",),
             loader=_lazy_loader("flexiconv.io.tbt", "load_tbt"),
-            description="Toolbox (TBT) interlinear text; converted to TEITOK-style TEI with <s>/<tok>/<morph>.",
+            description="Toolbox (TBT) interlinear text; converted to TEITOK-style TEI with <s>/<tok>/<m>.",
             data_type="igt",
         )
     )
@@ -377,8 +386,18 @@ def _register_builtin_formats() -> None:
             name="teitok",
             aliases=("tt",),
             saver=save_teitok,
-            description="Write a minimal TEITOK-style TEI with <tok> tokens and <s> sentences.",
+            description="Write TEITOK-style TEI from the pivot: <tok>, <s>, structure (headings, lists, tables), morphemes (<m>), images, highlights, and other layers when present.",
             data_type="tei/pivot",
+            supported_layers=("tokens", "sentences", "structure", "rendition"),
+        )
+    )
+    registry.register_output(
+        OutputFormat(
+            name="docx",
+            aliases=("word",),
+            saver=_lazy_saver("flexiconv.io.docx", "save_docx"),
+            description="Write a simple Word DOCX with headings, paragraphs, bullet lists, and tables from TEI/structure.",
+            data_type="richtext",
             supported_layers=("tokens", "sentences", "structure", "rendition"),
         )
     )

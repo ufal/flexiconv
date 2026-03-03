@@ -48,7 +48,7 @@ def _default_ext_for_format(fmt_name: str) -> str:
     _FMT = {
         "teitok": ".xml", "tei": ".xml", "rtf": ".rtf", "txt": ".txt",
         "html": ".html", "hocr": ".hocr", "conllu": ".conllu", "srt": ".srt",
-        "doreco": ".eaf", "exb": ".exb",
+        "doreco": ".eaf", "exb": ".exb", "docx": ".docx",
     }
     return _FMT.get((fmt_name or "").lower(), ".xml")
 
@@ -196,6 +196,21 @@ def run_convert(
             saver_kwargs["copy_original_to_originals"] = True
         if opts.get("prettyprint"):
             saver_kwargs["prettyprint"] = True
+        # Optional style stripping: --option styles=no (or styles=false/0/off)
+        opt_raw = (opts.get("option") or "").strip()
+        if opt_raw:
+            for part in opt_raw.split(";"):
+                part = part.strip()
+                if not part or "=" not in part:
+                    continue
+                key, val = part.split("=", 1)
+                key = key.strip().lower()
+                val = val.strip().lower()
+                if key == "styles":
+                    if val in {"no", "0", "false", "off", "none"}:
+                        saver_kwargs["strip_styles"] = True
+    if out_fmt_name == "docx":
+        saver_kwargs["source_path"] = input_path
     if out_fmt_name == "txt":
         saver_kwargs["linebreaks"] = opts.get("linebreaks", "paragraph")
 

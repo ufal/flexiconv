@@ -5,7 +5,7 @@ TBT format: line-based. Lines are \\fieldname content. A blank line separates re
 The field 'tx' is the main transcription (words separated by spaces). Other fields (e.g. mrph, mb, ge)
 can be morpheme-aligned: they have the same character-span alignment as tx (word boundaries follow
 spaces in tx; within each word, spaces in the first morpheme tier separate morphemes). Each record
-becomes <s original="..." lang="..."> with <tok>word<morph tier="val" .../></tok> children.
+becomes <s original="..." lang="..."> with <tok>word<m .../></tok> children.
 
 The TEI tree is stored in document.meta["_teitok_tei_root"] so save_teitok can write it verbatim.
 Tokens and sentences layers are populated from the TEI for consistency with other formats.
@@ -151,8 +151,8 @@ def _build_tei_from_tbt(path: str) -> etree._Element:
                             if val:
                                 attrs[tname] = val
                         if attrs:
-                            morph_el = etree.SubElement(tok, "morph", **attrs)
-                            morph_el.tail = ""
+                            m_el = etree.SubElement(tok, "m", **attrs)
+                            m_el.tail = ""
 
             tok.tail = " "
 

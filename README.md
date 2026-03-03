@@ -15,6 +15,8 @@ All conversions go via:
 - A **pivot model** in `flexiconv.core` (layers, anchors, nodes, spans) that can represent crossing annotations.
 - A **TEITOK-style TEI** representation (`flexiconv.io.teitok_xml`) that mirrors the conventions of `teitok-tools` and acts as a TEI/XML view of the pivot.
 
+The focus is on **semantic and structural fidelity** (sections, paragraphs, lists, tables, tokens, annotations), not on pixel-perfect reproduction of the original layout. Round-tripping formats (e.g. `DOCX → TEI → DOCX` or `PDF → TEI → HTML`) will typically preserve structure and content, but not exact visual identity; final page layout is left to tools like Word, browsers, or typesetters.
+
 ### Install
 
 Install from GitHub (requires Git):
@@ -58,13 +60,13 @@ flexiconv info format vert
 
 ### Desktop app (flexiConv)
 
-A **standalone desktop GUI** is available for conversion and (planned) deduplication — no Python install required. Download the installer for your platform from the **[`apps/`](apps/)** folder (or from [Releases](https://github.com/ufal/flexiconv/releases) when published). See `apps/README.md` for supported platforms and how to build the apps from source.
+A **standalone desktop GUI** is available for conversion and (planned) deduplication — no Python install required. Download the installer for your platform from the **[`apps/`](apps/)** folder (or from [Releases](https://github.com/ufal/flexiconv/releases) when published). See [apps/README.md](apps/README.md) for supported platforms and how to build the apps from source.
 
 ### Documentation
 
-- **Pivot model and mapping design**: see `examples/md/FORMATS_AND_MAPPINGS.md`; the pivot is implemented in `flexiconv.core.model` and reflected in the format pages under `wiki/`.
-- **Deduplication**: exact and near-identical duplicate detection, SQLite index, incremental and cross-format — see `wiki/Deduplication.md`.
-- **User-oriented docs and format pages**: see the `wiki/` folder; `wiki/README.md` is the index. Each supported format has a short page with:
+- **Pivot model and mapping design**: see [examples/md/FORMATS_AND_MAPPINGS.md](examples/md/FORMATS_AND_MAPPINGS.md); the pivot is implemented in `flexiconv.core.model` and reflected in the format pages under [wiki/](wiki/).
+- **Deduplication**: exact and near-identical duplicate detection, SQLite index, incremental and cross-format — see [wiki/Deduplication.md](wiki/Deduplication.md).
+- **User-oriented docs and format pages**: see the [wiki/](wiki/) folder; [wiki/README.md](wiki/README.md) is the index. Each supported format has a short page with:
   - Origin and typical use
   - A minimal example
   - How Flexiconv maps it to TEITOK / the pivot model.

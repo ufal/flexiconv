@@ -44,5 +44,18 @@ Simplified view of what Flexiconv aims to reconstruct:
   - Hyperlinks, images, and footnotes are represented in TEI where feasible (details in the module).
 
 - **Writing (`docx` output)**:
-  - Not currently a primary goal; Flexiconv focuses on **importing** DOCX into TEITOK TEI and the pivot model.
+  - Supported as a **simple export** from TEI / the pivot:
+    - `<head>` elements become Word headings (levels inferred from `@type` when present, e.g. `h2`, `h3`).
+    - `<p>` and similar block elements become paragraphs.
+    - `<list><item>` becomes bullet-style paragraphs (using the template’s “List Bullet” style when available).
+    - `<table><row><cell>` becomes Word tables with plain-text cell content.
+  - Inline markup (`<hi>`, `<m>`, etc.) is currently flattened to plain text; the focus is on structure, not rich styling.
+
+## Round-tripping and layout
+
+- Flexiconv is designed for **semantic/structural** conversion, not for pixel-perfect layout preservation.
+- As a result, a round-trip like `DOCX → TEI → DOCX` will typically **not** be graphically identical to the original:
+  - Paragraph and heading structure, lists, and tables are preserved where possible.
+  - Exact spacing, fonts, and paragraph spacing are left to the user’s Word template and styles.
+- This also means that DOCX exported from TEI may have different paragraph spacing than the original; Word’s default “Normal”/heading styles control visual gaps between paragraphs.
 

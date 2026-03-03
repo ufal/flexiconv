@@ -19,6 +19,8 @@ from lxml import etree
 
 from ..core.model import Document
 
+import re
+
 # Wordprocessing/drawing namespaces for DOCX
 NAMESPACES = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
@@ -152,6 +154,73 @@ def _paragraph_to_css(para: Any) -> str:
         if fill and fill != "FFFFFF":
             css.append(f"background-color: #{fill}")
     return " ".join(css)
+
+
+def _infer_heading_level(head_el: etree._Element) -> int:
+    """
+    Infer a heading level (1–6) for a TEI <head> element using several cues:
+
+    1) @type on <head>, e.g. type="main"/"sub"/"subsub" or "h1"/"h2"/"h3".
+    2) @type on the enclosing <div>, e.g. type="chapter"/"section"/"subsection".
+    3) Nesting depth of <div> ancestors under <body>/<text>.
+    4) @n patterns like "1", "1.1", "1.1.1" → level 1, 2, 3.
+    """
+
+    def _level_from_type(val: Optional[str]) -> Optional[int]:
+        if not val:
+            return None
+        v = val.strip().lower()
+        if not v:
+            return None
+        # Direct h1..h6 style
+        m = re.match(r"h([1-6])$", v)
+        if m:
+            return int(m.group(1))
+        # Common semantic labels
+        if v in {"main", "chapter", "title"}:
+            return 1
+        if v in {"sub", "section", "sec"}:
+            return 2
+        if v in {"subsub", "subsection", "sub-section"}:
+            return 3
+        return None
+
+    # 1) @type on <head>
+    lvl = _level_from_type(head_el.get("type"))
+    if lvl:
+        return min(max(lvl, 1), 6)
+
+    # 2) @type on enclosing <div>
+    parent = head_el.getparent()
+    if parent is not None and (parent.tag or "").split("}")[-1] == "div":
+        lvl = _level_from_type(parent.get("type"))
+        if lvl:
+            return min(max(lvl, 1), 6)
+
+    # 3) Nesting depth of <div> under <body>/<text>
+    depth = 0
+    anc = parent
+    while anc is not None:
+        tag = (anc.tag or "").split("}")[-1]
+        if tag == "div":
+            depth += 1
+        if tag in {"body", "text"}:
+            break
+        anc = anc.getparent()
+    if depth > 0:
+        return min(depth, 6)
+
+    # 4) @n like "1", "1.1", "1.1.1"
+    n_val = (head_el.get("n") or "").strip()
+    if n_val:
+        # Split on dot or other common separators.
+        parts = re.split(r"[.\-]", n_val)
+        nums = [p for p in parts if p.isdigit()]
+        if nums:
+            return min(len(nums), 6)
+
+    # Fallback
+    return 1
 
 
 def _process_run(run: Any, footnote_map: dict[str, str]) -> etree._Element:
@@ -477,3 +546,137 @@ def load_docx(
     doc.meta["_teitok_tei_root"] = tei_root
     doc.meta["_teitok_image_dir"] = used_image_dir
     return doc
+
+
+def save_docx(document: Document, path: str, *, source_path: Optional[str] = None, **kwargs: Any) -> None:
+    """
+    Write a simple DOCX document from the pivot / TEITOK-style TEI.
+
+    This is intentionally conservative:
+    - Uses <text>/<body> structure from TEI when available.
+    - Maps <head> to Word headings, <p> to paragraphs, <list>/<item> to
+      bullet paragraphs, and <table>/<row>/<cell> to Word tables.
+    - Inline markup (<hi>, <m>, etc.) is currently flattened to plain text.
+    """
+    DocxDocument, _ = _require_docx()
+
+    # Obtain a TEI root to drive the structure: prefer stored TEI, otherwise
+    # parse the original TEI/XML source if available.
+    tei_root = document.meta.get("_teitok_tei_root")
+    if tei_root is None and source_path and os.path.isfile(source_path):
+        tree = etree.parse(source_path)
+        tei_root = tree.getroot()
+
+    if tei_root is None:
+        # As a last resort, write a one-line DOCX with a generic message.
+        docx = DocxDocument()
+        docx.add_paragraph("Converted document (no TEI structure available).")
+        docx.save(path)
+        return
+
+    # Locate <text>/<body> in the TEI tree.
+    text_el = tei_root.xpath(".//*[local-name()='text']")
+    text_el = text_el[0] if text_el else tei_root
+    body_el = text_el.xpath("./*[local-name()='body']")
+    body_el = body_el[0] if body_el else text_el
+
+    def _append_inline_runs(src: etree._Element, para) -> None:
+        """
+        Append runs to a python-docx paragraph from a TEI element, preserving basic
+        inline styling from <hi style='...'> / <hi rend='...'> where possible.
+        """
+
+        def _add_text(text: str, bold: Optional[bool], italic: Optional[bool], underline: Optional[bool]) -> None:
+            if not text:
+                return
+            run = para.add_run(text)
+            if bold is not None:
+                run.bold = bold
+            if italic is not None:
+                run.italic = italic
+            if underline is not None:
+                run.underline = underline
+
+        def _style_from_hi(el: etree._Element, bold: Optional[bool], italic: Optional[bool], underline: Optional[bool]) -> tuple[Optional[bool], Optional[bool], Optional[bool]]:
+            style = (el.get("style") or el.get("rend") or "").lower()
+            b, i, u = bold, italic, underline
+            if "bold" in style or "font-weight" in style:
+                b = True
+            if "italic" in style or "emph" in style or "oblique" in style:
+                i = True
+            if "underline" in style:
+                u = True
+            # Very simple heuristics for rend='b', 'i', etc.
+            if not style:
+                rend = (el.get("rend") or "").lower()
+                if "b" in rend and b is None:
+                    b = True
+                if "i" in rend and i is None:
+                    i = True
+            return b, i, u
+
+        def _walk(node: etree._Element, bold: Optional[bool], italic: Optional[bool], underline: Optional[bool]) -> None:
+            if node.text:
+                _add_text(node.text, bold, italic, underline)
+            for child in node:
+                tag = (child.tag or "").split("}")[-1]
+                cbold, citalic, cunderline = bold, italic, underline
+                if tag == "hi":
+                    cbold, citalic, cunderline = _style_from_hi(child, cbold, citalic, cunderline)
+                _walk(child, cbold, citalic, cunderline)
+                if child.tail:
+                    _add_text(child.tail, bold, italic, underline)
+
+        _walk(src, None, None, None)
+
+    docx = DocxDocument()
+
+    # Clear the default empty paragraph if present.
+    if len(docx.paragraphs) == 1 and not (docx.paragraphs[0].text or "").strip():
+        p = docx.paragraphs[0]
+        p.text = ""
+
+    # Walk top-level children under <body>.
+    for child in body_el:
+        tag = (child.tag or "").split("}")[-1]
+        if tag == "head":
+            level = _infer_heading_level(child)
+            para = docx.add_heading("", level=level)
+            _append_inline_runs(child, para)
+        elif tag == "list":
+            # Each <item> becomes a bullet paragraph.
+            for item in child.xpath("./*[local-name()='item']"):
+                # Create a bullet paragraph and fill it from the TEI content.
+                para = docx.add_paragraph("")
+                try:
+                    para.style = "List Bullet"
+                except Exception:
+                    # Fallback if the style does not exist in the template.
+                    pass
+                _append_inline_runs(item, para)
+        elif tag == "table":
+            rows = child.xpath("./*[local-name()='row']")
+            if not rows:
+                continue
+            max_cols = 0
+            row_cells: list[list[etree._Element]] = []
+            for r in rows:
+                cells = r.xpath("./*[local-name()='cell']")
+                row_cells.append(cells)
+                if len(cells) > max_cols:
+                    max_cols = len(cells)
+            if max_cols == 0:
+                continue
+            table = docx.add_table(rows=len(row_cells), cols=max_cols)
+            for r_idx, cells in enumerate(row_cells):
+                for c_idx, cell in enumerate(cells):
+                    paragraph = table.rows[r_idx].cells[c_idx].paragraphs[0]
+                    # Clear any default text and append runs based on TEI cell content.
+                    paragraph.text = ""
+                    _append_inline_runs(cell, paragraph)
+        else:
+            # Default: treat as a paragraph-like block.
+            para = docx.add_paragraph("")
+            _append_inline_runs(child, para)
+
+    docx.save(path)

@@ -26,6 +26,7 @@ Use `flexiconv info formats` for the authoritative, runtime view.
 - [Markdown (`md`)](Format-md.md)
 - [Plain text (`txt`)](Format-txt.md)
 - [EPUB (`epub`)](Format-epub.md)
+ - [LaTeX (`latex`)](Format-latex.md)
 
 ## Spoken corpora and transcripts
 

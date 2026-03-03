@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+import os
 from lxml import etree
 
 from ..core.model import Anchor, AnchorType, Document, Node
@@ -26,6 +27,9 @@ def load_tei_p5(path: str, *, doc_id: Optional[str] = None) -> Document:
     if doc_id is None:
         doc_id = root.get("xml:id") or path
     doc = Document(id=doc_id)
+    doc.meta["source_filename"] = os.path.basename(path)
+    # Keep the original TEI tree so TEITOK/HTML writers can reuse it verbatim when appropriate.
+    doc.meta["_teitok_tei_root"] = root
 
     tokens_layer = doc.get_or_create_layer("tokens")
     sentences_layer = doc.get_or_create_layer("sentences")

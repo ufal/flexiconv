@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interlinear-text>
+  <paragraph>
+    <phrase>
+      <item type="gls" lang="en">The cat sat on the mat.</item>
+      <word>
+        <item type="txt" lang="en">the</item>
+        <item type="gls" lang="en">DET</item>
+      </word>
+      <word>
+        <item type="txt" lang="en">cat</item>
+        <item type="gls" lang="en">N</item>
+      </word>
+      <word>
+        <item type="txt" lang="en">sat</item>
+        <item type="gls" lang="en">V</item>
+      </word>
+      <word>
+        <item type="txt" lang="en">on</item>
+        <item type="gls" lang="en">P</item>
+      </word>
+      <word>
+        <item type="txt" lang="en">the</item>
+        <item type="gls" lang="en">DET</item>
+      </word>
+      <word>
+        <item type="txt" lang="en">mat</item>
+        <item type="gls" lang="en">N</item>
+      </word>
+    </phrase>
+    <phrase>
+      <item type="gls" lang="en">Hello world.</item>
+      <word>
+        <item type="txt" lang="en">hello</item>
+        <item type="gls" lang="en">INTJ</item>
+      </word>
+      <word>
+        <item type="txt" lang="en">world</item>
+        <item type="gls" lang="en">N</item>
+      </word>
+    </phrase>
+  </paragraph>
+</interlinear-text>

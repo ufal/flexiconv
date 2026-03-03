@@ -65,6 +65,8 @@ def mime_to_format(mime: str) -> Optional[str]:
         return "epub"
     if mime in {"text/markdown"}:
         return "md"
+    if mime in {"application/x-tex", "text/x-tex", "application/x-latex"}:
+        return "latex"
     if mime in {"text/praat-textgrid"}:
         return "textgrid"
     if mime in {"text/x-toolbox-text", "application/x-toolbox"}:
@@ -108,6 +110,7 @@ _EXT_TO_INPUT = {
     ".page.xml": "pagexml",
     ".txt": "txt",
     ".md": "md",
+    ".tex": "latex",
     ".markdown": "md",
     ".srt": "srt",
     ".eaf": "eaf",
@@ -136,6 +139,7 @@ _EXT_TO_INPUT = {
 }
 _EXT_TO_OUTPUT = {
     ".rtf": "rtf",
+    ".docx": "docx",
     ".html": "html",
     ".htm": "html",
     ".xhtml": "html",
@@ -196,8 +200,15 @@ def path_to_input_format(path: str) -> Optional[str]:
             return "flex"
         if "<document" in lowered and ("interlinear-text" in lowered or "flexinterlinear" in lowered):
             return "flex"
-        # TEI / TEITOK (fall back to TEITOK when <tok> present)
-        return "teitok" if "<tok" in snippet else "tei"
+        # TEI / TEITOK detection:
+        # - When <tok> is present, assume TEITOK-style TEI.
+        # - When <w> tokens are present (namespaced or not), assume generic TEI P5.
+        # - Otherwise, default to TEITOK-style TEI, since flexiconv is TEITOK-centric.
+        if "<tok" in snippet:
+            return "teitok"
+        if "<w " in lowered or "<w>" in lowered:
+            return "tei"
+        return "teitok"
 
     # CoNLL-U / CoNLL-U-Plus detection by content (for unknown extensions).
     try:
