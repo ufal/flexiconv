@@ -95,6 +95,32 @@ def _default_ext_for_format(fmt_name: str) -> str:
     return _FMT_DEFAULT_EXT.get(fmt, ".xml")
 
 
+def _try_auto_install_extras(error_message: str) -> bool:
+    """If error_message mentions a missing flexiconv extra (e.g. flexiconv[docx]), run pip install and return True on success."""
+    if not error_message:
+        return False
+    # Match flexiconv[docx], flexiconv[rtf], etc. (single extra or comma-separated)
+    match = re.search(r"flexiconv\[([^\]]+)\]", error_message)
+    if not match:
+        return False
+    extra_spec = match.group(1).strip()
+    if not extra_spec:
+        return False
+    # Normalize: allow "docx" or "rtf,docx" -> install as flexiconv[docx] or flexiconv[rtf,docx]
+    pkg = f"flexiconv[{extra_spec}]"
+    cmd = [sys.executable, "-m", "pip", "install", pkg]
+    try:
+        sys.stderr.write(f"[flexiconv] Installing missing support: {pkg}\n")
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        if result.returncode != 0:
+            if result.stderr:
+                sys.stderr.write(result.stderr)
+            return False
+        return True
+    except Exception:
+        return False
+
+
 def _default_output_in_teitok_project(input_path: str) -> Optional[str]:
     """If input is under or we're in a TEITOK project, return project/xmlfiles/{safe_basename}.xml."""
     project = _find_teitok_project_root(input_path) or _find_teitok_project_root(
@@ -805,6 +831,12 @@ def _make_convert_parser(prog: str = "flexiconv convert") -> argparse.ArgumentPa
         action="store_true",
         help="Ask the output format (when supported) to pretty-print for readability without changing spacing.",
     )
+    p.add_argument(
+        "--no-auto-install",
+        dest="auto_install",
+        action="store_false",
+        help="Do not auto-install missing format support (e.g. docx, pdf) when conversion fails for a missing dependency.",
+    )
     return p
 
 
@@ -812,11 +844,17 @@ def _cmd_convert(argv: list[str]) -> int:
     return _run_convert(_make_convert_parser("flexiconv convert"), argv)
 
 
-def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
+def _run_convert(
+    parser: argparse.ArgumentParser,
+    argv: list[str],
+    api_result: Optional[Dict[str, Any]] = None,
+) -> int:
     args = parser.parse_args(argv)
 
     def _fail(message: str, code: int = 2) -> int:
         """Print a flexiconv-style error without argparse usage noise."""
+        if api_result is not None:
+            api_result.setdefault("error", message)
         sys.stderr.write(f"[flexiconv] {message}\n")
         return code
 
@@ -839,6 +877,8 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
             return _fail(f"Unknown output format: {requested_out}")
 
     input_path = args.input
+    if api_result is not None:
+        api_result["input"] = os.path.abspath(input_path)
     output_path = args.output
 
     # Directory + --recursive: batch-convert all files under INPUT.
@@ -904,6 +944,8 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
             common.append("--vert-no-doc-split")
         if getattr(args, "flexipipe", None):
             common += ["--flexipipe", args.flexipipe]
+        if not getattr(args, "auto_install", True):
+            common.append("--no-auto-install")
 
         total = 0
         errors = 0
@@ -1058,12 +1100,19 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
         ext = _default_ext_for_format(out_fmt_for_dir)
         output_path = os.path.join(output_path, stem + ext)
 
+    if api_result is not None and output_path is not None:
+        api_result["output"] = os.path.abspath(output_path)
+
     out_fmt_name = args.to_format or _detect_output_format(output_path)
 
     if not in_fmt_name:
         return _fail("Could not detect input format; please use -f/--from.")
     if not out_fmt_name:
         return _fail("Could not detect output format; please use -t/--to.")
+
+    if api_result is not None:
+        api_result["from_format"] = in_fmt_name
+        api_result["to_format"] = out_fmt_name
 
     # Heuristic: DOCX/hOCR → .xml should default to TEITOK-style TEI,
     # since load_docx/load_hocr produce a ready-made TEITOK TEI tree.
@@ -1132,6 +1181,18 @@ def _run_convert(parser: argparse.ArgumentParser, argv: list[str]) -> int:
     except CancelError:
         sys.stderr.write("[flexiconv] Conversion cancelled.\n")
         return 130
+    # On missing-extra failure, optionally auto-install and retry once.
+    if not result.success and getattr(args, "auto_install", True):
+        if _try_auto_install_extras(result.error_message or ""):
+            result = api_run_convert(
+                input_path,
+                output_path,
+                from_format=in_fmt_name,
+                to_format=out_fmt_name,
+                options=convert_options,
+                progress_callback=_progress_cb if args.verbose else None,
+                cancel_check=None,
+            )
     if not result.success:
         return _fail(result.error_message or "Conversion failed")
 
@@ -1704,6 +1765,75 @@ def main(argv: Optional[list[str]] = None) -> int:
         if "--json" in argv:
             info_argv.append("--json")
         return _cmd_info(info_argv)
+
+    # Global --api flag: single-file conversion with machine-readable JSON summary.
+    api_mode = False
+    if "--api" in argv:
+        api_mode = True
+        argv = [arg for arg in argv if arg != "--api"]
+
+    if api_mode:
+        # Currently only support conversion operations in API mode.
+        if argv and argv[0] in ("info", "install", "update", "duplicates"):
+            payload: Dict[str, Any] = {
+                "status": "error",
+                "task": "convert",
+                "backend": "flexiconv",
+                "model": None,
+                "language": None,
+                "input": None,
+                "output": None,
+                "writeback": False,
+                "exit_code": 2,
+                "error": "--api is only supported for conversion commands",
+            }
+            print(json.dumps(payload))
+            return 2
+
+        # Accept both "flexiconv convert ..." and bare "flexiconv INPUT [OUTPUT]".
+        if argv and argv[0] == "convert":
+            convert_argv = argv[1:]
+        else:
+            convert_argv = argv
+
+        # For now, API mode only supports single-file conversion (no recursive directory mode).
+        if any(flag in convert_argv for flag in ("--recursive", "-R")):
+            payload = {
+                "status": "error",
+                "task": "convert",
+                "backend": "flexiconv",
+                "model": None,
+                "language": None,
+                "input": None,
+                "output": None,
+                "writeback": False,
+                "exit_code": 2,
+                "error": "--api does not support recursive conversion; call on one file at a time",
+            }
+            print(json.dumps(payload))
+            return 2
+
+        api_result: Dict[str, Any] = {
+            "status": "error",
+            "task": "convert",
+            "backend": "flexiconv",
+            "model": None,
+            "language": None,
+            "input": None,
+            "output": None,
+            "writeback": False,
+        }
+        exit_code = _run_convert(_make_convert_parser("flexiconv"), convert_argv, api_result=api_result)
+        api_result["exit_code"] = exit_code
+        api_result["status"] = "ok" if exit_code == 0 else "error"
+
+        # Consider the conversion a "writeback" when the output lands inside a TEITOK project.
+        out_path = api_result.get("output")
+        project_root = _find_teitok_project_root(out_path) if out_path else None
+        api_result["writeback"] = bool(project_root)
+
+        print(json.dumps(api_result))
+        return exit_code
 
     # Subcommands: flexiconv info|install|update|convert|duplicates ...
     if argv:

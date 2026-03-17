@@ -1,11 +1,78 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from lxml import etree
 from lxml import html as lxml_html
 
 from ..core.model import Anchor, AnchorType, Document, Node
+
+
+def _local_tag(elem: etree._Element) -> str:
+    tag = elem.tag if isinstance(elem.tag, str) else (elem.tag or "")
+    return tag.split("}")[-1] if "}" in tag else tag
+
+
+def _rend_from_tag(tag: str) -> Optional[str]:
+    t = tag.lower()
+    if t in ("strong", "b"):
+        return "bold"
+    if t in ("em", "i"):
+        return "italic"
+    return None
+
+
+def _inline_segments(
+    elem: etree._Element,
+    stop_at_list: bool = False,
+) -> List[Tuple[str, Optional[str]]]:
+    """Extract (text, rend) segments from an element's inline content. rend is 'bold'|'italic'|None."""
+    segments: List[Tuple[str, Optional[str]]] = []
+    if elem.text:
+        segments.append((elem.text, None))
+    for child in elem:
+        tag = _local_tag(child).lower()
+        if stop_at_list and tag in ("ul", "ol"):
+            break
+        rend = _rend_from_tag(tag)
+        sub = _inline_segments(child, stop_at_list=stop_at_list)
+        for t, r in sub:
+            segments.append((t, r if r is not None else rend))
+        if child.tail:
+            segments.append((child.tail, None))
+    return segments
+
+
+def _merge_segments(segments: List[Tuple[str, Optional[str]]]) -> List[Tuple[str, Optional[str]]]:
+    """Merge adjacent segments with the same rend."""
+    if not segments:
+        return []
+    out: List[Tuple[str, Optional[str]]] = []
+    cur_text, cur_rend = segments[0]
+    for t, r in segments[1:]:
+        if r == cur_rend:
+            cur_text += t
+        else:
+            if cur_text:
+                out.append((cur_text, cur_rend))
+            cur_text, cur_rend = t, r
+    if cur_text:
+        out.append((cur_text, cur_rend))
+    return out
+
+
+def _li_direct_text(li_elem: etree._Element) -> str:
+    """Text content of an li up to (but not including) the first nested ul/ol."""
+    parts: List[str] = []
+    if li_elem.text:
+        parts.append(li_elem.text)
+    for child in li_elem:
+        if _local_tag(child).lower() in ("ul", "ol"):
+            break
+        if child.text:
+            parts.append(child.text)
+        parts.append(child.tail or "")
+    return "".join(parts).strip()
 
 
 def document_from_html_root(
@@ -19,7 +86,8 @@ def document_from_html_root(
     a string). Used by load_html and by load_md (Markdown → HTML → this).
 
     Extracts visible text from block-level elements (p, h1–h6, li, blockquote, div)
-    into a 'structure' layer; no tokenization.
+    into a 'structure' layer; preserves nested list structure (list inside list item)
+    via node.parent / node.children. No tokenization.
     """
     doc = Document(id=doc_id)
     doc.meta["source_filename"] = source_filename
@@ -29,40 +97,78 @@ def document_from_html_root(
     if body is None:
         body = root
 
-    block_xpath = ".//p | .//h1 | .//h2 | .//h3 | .//h4 | .//h5 | .//h6 | .//li | .//blockquote | .//div"
-    blocks = body.xpath(block_xpath)
-    # When body is the root (e.g. MD wrapped in <div>), do not treat the root as a block.
-    blocks = [b for b in blocks if b is not body]
+    def _walk_blocks_with_parent(
+        elem: etree._Element,
+        parent_li_el: Optional[etree._Element],
+        out: List[Tuple[etree._Element, Optional[etree._Element]]],
+    ) -> None:
+        tag = _local_tag(elem).lower()
+        if tag in ("ul", "ol", "div"):
+            for child in elem:
+                _walk_blocks_with_parent(child, parent_li_el, out)
+            return
+        if tag == "li":
+            out.append((elem, parent_li_el))
+            for child in elem:
+                _walk_blocks_with_parent(child, elem, out)
+            return
+        if tag in ("p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"):
+            # Only emit as top-level block when not inside a list item (avoids duplicating item text)
+            if parent_li_el is None:
+                out.append((elem, None))
+            return
+        for child in elem:
+            _walk_blocks_with_parent(child, parent_li_el, out)
+
+    order_with_parent_el: List[Tuple[etree._Element, Optional[etree._Element]]] = []
+    for child in body:
+        _walk_blocks_with_parent(child, None, order_with_parent_el)
 
     offset = 0
     para_idx = 0
+    li_element_to_node_id: dict[int, str] = {}  # id(li element) -> node id for resolving parent
 
-    for elem in blocks:
-        text = elem.text_content()
+    for elem, parent_li_el in order_with_parent_el:
+        tag = _local_tag(elem).lower()
+        if tag == "li":
+            text = _li_direct_text(elem)
+            raw_segments = _merge_segments(_inline_segments(elem, stop_at_list=True))
+        else:
+            text = elem.text_content() if elem.text_content() else ""
+            raw_segments = _merge_segments(_inline_segments(elem))
         if text is None:
             continue
         stripped = text.strip()
-        if not stripped:
+        if not stripped and tag != "li":
             continue
+        # Allow empty li (e.g. placeholder item) to keep structure
+        if not stripped and tag == "li":
+            stripped = ""
 
         para_idx += 1
         start = offset
         end = start + len(stripped)
 
-        anchor = Anchor(
-            type=AnchorType.CHAR,
-            char_start=start,
-            char_end=end,
-        )
-        tag = elem.tag if isinstance(elem.tag, str) else (elem.tag or "")
-        local_tag = tag.split("}")[-1] if "}" in tag else tag
+        parent_id: Optional[str] = None
+        if parent_li_el is not None and id(parent_li_el) in li_element_to_node_id:
+            parent_id = li_element_to_node_id[id(parent_li_el)]
+
+        features: dict = {"text": stripped}
+        if raw_segments and any(r for _, r in raw_segments):
+            features["content_segments"] = [[t, r] for t, r in raw_segments]
+
         node = Node(
             id=f"p{para_idx}",
-            type=local_tag.lower(),
-            anchors=[anchor],
-            features={"text": stripped},
+            type=tag,
+            anchors=[Anchor(type=AnchorType.CHAR, char_start=start, char_end=end)],
+            features=features,
+            parent=parent_id,
         )
         structure.nodes[node.id] = node
+        if parent_id and parent_id in structure.nodes:
+            structure.nodes[parent_id].children.append(node.id)
+        if tag == "li":
+            li_element_to_node_id[id(elem)] = node.id
         offset = end + 1
 
     return doc

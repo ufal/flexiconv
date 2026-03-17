@@ -694,13 +694,18 @@ def save_teitok(
 
     if has_structure:
         # Structure nodes in document order; use node.type for TEI element (head, list/item, quote, p).
-        struct_nodes = sorted(
+        all_struct = sorted(
             structure_layer.nodes.values(),
             key=lambda n: (
                 n.anchors[0].char_start if n.anchors and n.anchors[0].char_start is not None else 0,
                 n.id,
             ),
         )
+        # Only top-level blocks: skip li nodes that have an li parent (they are emitted inside that parent).
+        struct_nodes = [
+            n for n in all_struct
+            if not (n.type and n.type.lower() == "li" and n.parent and structure_layer.nodes.get(n.parent) and structure_layer.nodes[n.parent].type and structure_layer.nodes[n.parent].type.lower() == "li")
+        ]
         list_el: Optional[etree._Element] = None  # open <list> when we see consecutive <li>
 
         def _set_block_content(block_el: etree._Element, node: Node) -> None:
@@ -715,15 +720,60 @@ def save_teitok(
                 ]
                 _add_tokens_to_p(block_el, in_para, sentences_layer)
             if len(block_el) == 0:
-                text = (node.features.get("text") or "").strip()
-                if text and block_el.tag == "p" and node.anchors and node.anchors[0].char_start is not None and node.anchors[0].char_end is not None:
-                    _set_paragraph_content(
-                        block_el, text,
-                        node.anchors[0].char_start, node.anchors[0].char_end,
-                        rendition_layer,
-                    )
-                elif text:
-                    block_el.text = text
+                segments = node.features.get("content_segments")
+                if segments:
+                    # Inline formatting from HTML/MD (bold, italic) -> <hi rend="...">
+                    last_el = block_el
+                    pending = ""
+                    for part in segments:
+                        t = part[0] if isinstance(part, (list, tuple)) else ""
+                        r = part[1] if isinstance(part, (list, tuple)) and len(part) > 1 else None
+                        if r:
+                            if last_el is block_el:
+                                block_el.text = (block_el.text or "") + pending
+                            else:
+                                last_el.tail = (last_el.tail or "") + pending
+                            pending = ""
+                            hi_el = etree.SubElement(block_el, "hi")
+                            hi_el.set("rend", r)
+                            hi_el.text = t or ""
+                            last_el = hi_el
+                        else:
+                            pending += t or ""
+                    if last_el is block_el:
+                        block_el.text = (block_el.text or "") + pending
+                    else:
+                        last_el.tail = (last_el.tail or "") + pending
+                else:
+                    text = (node.features.get("text") or "").strip()
+                    if text and block_el.tag == "p" and node.anchors and node.anchors[0].char_start is not None and node.anchors[0].char_end is not None:
+                        _set_paragraph_content(
+                            block_el, text,
+                            node.anchors[0].char_start, node.anchors[0].char_end,
+                            rendition_layer,
+                        )
+                    elif text:
+                        block_el.text = text
+
+        def _emit_item_with_nested(list_parent: etree._Element, li_node: Node) -> None:
+            """Append one <item> to list_parent for li_node, and recurse for nested list items."""
+            item_el = etree.SubElement(list_parent, "item")
+            _set_block_content(item_el, li_node)
+            child_li = [
+                structure_layer.nodes[cid]
+                for cid in (li_node.children or [])
+                if cid in structure_layer.nodes and (structure_layer.nodes[cid].type or "").lower() == "li"
+            ]
+            if child_li:
+                child_li.sort(
+                    key=lambda n: (
+                        n.anchors[0].char_start if n.anchors and n.anchors[0].char_start is not None else 0,
+                        n.id,
+                    ),
+                )
+                nested_list = etree.SubElement(item_el, "list")
+                for child_node in child_li:
+                    _emit_item_with_nested(nested_list, child_node)
 
         for i, node in enumerate(struct_nodes):
             if i > 0:
@@ -737,8 +787,7 @@ def save_teitok(
             if node_type == "li":
                 if list_el is None:
                     list_el = etree.SubElement(body_el, "list")
-                item_el = etree.SubElement(list_el, "item")
-                _set_block_content(item_el, node)
+                _emit_item_with_nested(list_el, node)
                 continue
 
             # Non-list item: close any open list

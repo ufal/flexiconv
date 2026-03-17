@@ -252,17 +252,64 @@ def _process_run(run: Any, footnote_map: dict[str, str]) -> etree._Element:
     return elem
 
 
+def _ensure_space_between(
+    prev_tail: Optional[str],
+    next_text: Optional[str],
+    *,
+    after_element: bool = False,
+) -> str:
+    """Return the string prev_tail should become so there is whitespace before next_text (for TEITOK).
+    Add space when the two parts do not display as one unit. Do not add between un + real (same word).
+    When after_element is True, prev_tail is empty means we are after an element (e.g. after \"1\"), so add space before \"Rus\"."""
+    pt = prev_tail or ""
+    nt = next_text or ""
+    if not nt.strip():
+        return pt
+    if pt.rstrip() != pt:
+        return pt  # already ends with whitespace
+    if nt and nt[0].isspace():
+        return pt  # next starts with whitespace
+    # No previous content
+    if not pt.strip():
+        if after_element:
+            return pt + " "  # after an element, add space before next (e.g. \"1\" then \"Rus\")
+        return (pt + " ") if (nt.strip() and not nt[0].isalpha()) else pt  # start: no space before \"un\"
+    # Do not add space when both sides are alphabetic (same word, e.g. un + real in un*real*)
+    if pt and nt and pt[-1].isalpha() and nt[0].isalpha():
+        return pt
+    return pt + " "
+
+
+def _ensure_trailing_space_before(parent: etree._Element, new_child: etree._Element) -> None:
+    """Ensure there is whitespace between the last child of parent and new_child's text (for TEITOK)."""
+    if len(parent) == 0:
+        return
+    last = parent[-1]
+    prev_tail = last.tail or ""
+    next_text = new_child.text or ""
+    last.tail = _ensure_space_between(prev_tail, next_text, after_element=True)
+
+
 def _append_mixed_content(src: etree._Element, dst: etree._Element) -> None:
     last = dst[-1] if len(dst) > 0 else None
+    src_text = src.text or ""
     if last is None:
-        dst.text = (dst.text or "") + (src.text or "")
+        existing = dst.text or ""
+        dst.text = _ensure_space_between(existing, src_text, after_element=False) + src_text
     else:
-        last.tail = (last.tail or "") + (src.text or "")
-    for child in src:
+        existing = last.tail or ""
+        last.tail = _ensure_space_between(existing, src_text, after_element=True) + src_text
+    for i, child in enumerate(src):
         copied = copy.deepcopy(child)
         dst.append(copied)
-        if child.tail:
-            copied.tail = child.tail
+        copied.tail = child.tail or ""
+        # Ensure whitespace before next sibling's text unless same word (e.g. un + real)
+        next_sib = src[i + 1] if i + 1 < len(src) else None
+        next_text = (next_sib.text or "") if next_sib is not None else ""
+        if next_text.strip() and not (next_text[0].isspace() if next_text else True):
+            if not copied.tail.endswith((" ", "\n", "\t")):
+                if not (copied.tail and copied.tail[-1].isalpha() and next_text[0].isalpha()):
+                    copied.tail = copied.tail + " "
 
 
 def _process_paragraph(
@@ -293,7 +340,9 @@ def _process_paragraph(
                 ref_elem.text = "".join(
                     (n.text or "") for n in child.findall(".//w:t", namespaces=NAMESPACES)
                 )
+                _ensure_trailing_space_before(p_elem, ref_elem)
                 p_elem.append(ref_elem)
+                lasthi = ref_elem
         elif tag == "r":
             run = run_map.get(child)
             if run is None:
@@ -306,6 +355,7 @@ def _process_paragraph(
                 elif hi.get("style") == lasthi.get("style"):
                     _append_mixed_content(hi, lasthi)
                 else:
+                    _ensure_trailing_space_before(p_elem, hi)
                     p_elem.append(hi)
                     lasthi = hi
         for drawing in child.findall(".//w:drawing", namespaces=NAMESPACES):
@@ -454,9 +504,15 @@ def docx_to_tei_tree(
 
     def _is_list_paragraph(para: Any) -> bool:
         """Return True if this paragraph is part of a list (bulleted/numbered)."""
-        pPr = getattr(para._p, "pPr", None)
-        if pPr is not None and getattr(pPr, "numPr", None) is not None:
+        # 1) Check paragraph properties for numbering (OOXML w:pPr/w:numPr)
+        pPr = para._element.find(_qn("w", "pPr"))
+        if pPr is not None and pPr.find(_qn("w", "numPr")) is not None:
             return True
+        # 2) Fallback: python-docx object model if available
+        pPr_obj = getattr(para._p, "pPr", None)
+        if pPr_obj is not None and getattr(pPr_obj, "numPr", None) is not None:
+            return True
+        # 3) Style name hints
         name = (getattr(para.style, "name", "") or "").lower()
         return "list" in name or "bullet" in name or "number" in name
 
@@ -501,8 +557,8 @@ def docx_to_tei_tree(
                             if len(item) == 0:
                                 item.text = processed.text
                             else:
-                                # Append as tail of last child
-                                item[-1].tail = (item[-1].tail or "") + processed.text
+                                existing = item[-1].tail or ""
+                                item[-1].tail = _ensure_space_between(existing, processed.text, after_element=True) + processed.text
                     else:
                         current_list = None
                         body.append(processed)
