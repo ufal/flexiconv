@@ -11,7 +11,9 @@ The resulting TEI tree is stored in Document.meta["_teitok_tei_root"] so that sa
 can write it verbatim and round-trip behaviour stays close to the original Perl converter.
 
 Non-tokenized lines (TextLine without Word children) emit plain text after each <lb>.
-PAGE @custom-based inline annotations are not converted yet.
+TextRegion @type and structure {type:…;} from @custom are copied to the TEI <div type="…">.
+TextRegions with readingOrder {index:…;} in @custom are emitted in that order.
+Other PAGE @custom inline annotations are not converted yet.
 """
 from __future__ import annotations
 
@@ -51,6 +53,62 @@ def _make_bbox_from_points(points: str) -> str:
     if xmax < xmin or ymax < ymin:
         return ""
     return f"{int(xmin)} {int(ymin)} {int(xmax)} {int(ymax)}"
+
+
+def _parse_page_custom(custom: str) -> dict[str, str]:
+    """Parse PAGE @custom chunks like 'readingOrder {index:0;} structure {type:paragraph;}'."""
+    out: dict[str, str] = {}
+    if not custom:
+        return out
+    for chunk in custom.split("}"):
+        chunk = chunk.strip()
+        if not chunk or "{" not in chunk:
+            continue
+        key, value = chunk.split("{", 1)
+        key = key.strip()
+        value = value.strip().rstrip(";")
+        if key:
+            out[key] = value
+    return out
+
+
+def _custom_field_value(custom_map: dict[str, str], field: str, key: str) -> str:
+    """Extract a key from a semicolon-separated @custom field (e.g. type from structure)."""
+    block = custom_map.get(field, "")
+    for item in block.split(";"):
+        item = item.strip()
+        if item.startswith(f"{key}:"):
+            return item[len(key) + 1 :].strip()
+    return ""
+
+
+def _text_region_type(area: etree._Element) -> str:
+    """Region type from @type or structure {type:…;} in @custom."""
+    direct = (area.get("type") or "").strip()
+    if direct:
+        return direct
+    custom_map = _parse_page_custom(area.get("custom") or "")
+    return _custom_field_value(custom_map, "structure", "type")
+
+
+def _text_region_reading_order(area: etree._Element) -> Optional[int]:
+    """readingOrder {index:N;} from @custom, if present."""
+    custom_map = _parse_page_custom(area.get("custom") or "")
+    raw = _custom_field_value(custom_map, "readingOrder", "index")
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def _text_regions_in_reading_order(page: etree._Element) -> list[etree._Element]:
+    """TextRegion children sorted by readingOrder index when declared, else document order."""
+    areas = page.xpath("./*[local-name()='TextRegion']")
+    indexed = [(i, area, _text_region_reading_order(area)) for i, area in enumerate(areas)]
+    indexed.sort(key=lambda t: (t[2] is None, t[2] if t[2] is not None else t[0], t[0]))
+    return [area for _, area, _ in indexed]
 
 
 def _ensure_simple_header_for_page(
@@ -121,13 +179,12 @@ def pagexml_to_tei_tree(
         if image_url:
             pb.set("facs", image_url)
 
-        # Regions
-        area_idx = 0
-        for area in page.xpath("./*[local-name()='TextRegion']"):
-            area_idx += 1
+        # Regions (optionally reordered by readingOrder {index:…;} in @custom)
+        for area_idx, area in enumerate(_text_regions_in_reading_order(page), start=1):
             coords_elems = area.xpath("./*[local-name()='Coords']")
             points = coords_elems[0].get("points") if coords_elems else ""
             bbox = _make_bbox_from_points(points)
+            region_type = _text_region_type(area)
 
             facs_id2 = f"facs-{fnr}.a{area_idx}"
             enr += 1
@@ -142,11 +199,15 @@ def pagexml_to_tei_tree(
             )
             if points:
                 zone_region.set("points", points)
+            if region_type:
+                zone_region.set("subtype", region_type)
 
             # Corresponding <div> in text
             div = etree.SubElement(text_el, "div", id=div_id, corresp=f"#{facs_id2}")
             if bbox:
                 div.set("bbox", bbox)
+            if region_type:
+                div.set("type", region_type)
 
             # Lines
             for line in area.xpath("./*[local-name()='TextLine']"):

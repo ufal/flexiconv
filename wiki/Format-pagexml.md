@@ -32,6 +32,7 @@ Flexiconv maps Page → surface, TextRegion/TextLine → zones, Word → `<tok>`
 
 - **Reading (`pagexml` input)**:
   - Page → `<pb>`/`<surface>`; regions and lines → `<zone>`; words → `<tok>` with coordinates. Image reference from PAGE is kept in facsimile when present.
+  - `TextRegion/@type` or `structure {type:…;}` in `@custom` → `type` on the TEI `<div>` (and `subtype` on the matching facsimile zone). `readingOrder {index:…;}` reorders regions on the page.
   - Punctuation splitting can be applied at word level (configurable).
 
 - **Writing (`pagexml` output)**:
