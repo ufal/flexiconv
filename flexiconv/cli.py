@@ -81,6 +81,7 @@ _FMT_DEFAULT_EXT = {
     "txt": ".txt",
     "html": ".html",
     "hocr": ".hocr",
+    "xpdf": ".xpdf.html",
     "conllu": ".conllu",
     "srt": ".srt",
     "doreco": ".eaf",
@@ -186,7 +187,7 @@ def _register_builtin_formats() -> None:
             name="pdf",
             aliases=(),
             loader=_lazy_loader("flexiconv.io.pdf", "load_pdf"),
-            description="PDF; best-effort text and image extraction into TEITOK-style TEI.",
+            description="PDF; best-effort text and image extraction into TEITOK-style TEI (use --option pdf=bbox for word coordinates via pdftotext).",
             data_type="richtext",
         )
     )
@@ -241,6 +242,15 @@ def _register_builtin_formats() -> None:
             aliases=(),
             loader=_lazy_loader("flexiconv.io.hocr", "load_hocr"),
             description="hOCR (HTML with ocr_page/ocr_line/ocrx_word); converted to TEITOK-style TEI with bbox.",
+            data_type="ocr",
+        )
+    )
+    registry.register_input(
+        InputFormat(
+            name="xpdf",
+            aliases=("bbox-layout", "pdftotext-bbox"),
+            loader=_lazy_loader("flexiconv.io.xpdf", "load_xpdf"),
+            description="XPDF bbox-layout HTML (pdftotext -bbox-layout); converted to TEITOK-style TEI with word bbox.",
             data_type="ocr",
         )
     )
@@ -439,6 +449,16 @@ def _register_builtin_formats() -> None:
     )
     registry.register_output(
         OutputFormat(
+            name="xpdf",
+            aliases=("bbox-layout", "pdftotext-bbox"),
+            saver=_lazy_saver("flexiconv.io.xpdf", "save_xpdf"),
+            description="XPDF bbox-layout HTML (pdftotext -bbox-layout format); round-trip with TEITOK TEI bbox.",
+            data_type="ocr",
+            supported_layers=("tokens", "structure"),
+        )
+    )
+    registry.register_output(
+        OutputFormat(
             name="tei",
             aliases=("tei-p5",),
             saver=save_tei_p5,
@@ -546,7 +566,7 @@ def _format_data_type(fmt_name: str) -> str:
         return "richtext"
     if name in {"txt"}:
         return "plain"
-    if name in {"hocr", "pagexml", "alto"}:
+    if name in {"hocr", "pagexml", "alto", "xpdf"}:
         return "ocr"
     if name in {"eaf", "doreco", "textgrid", "exb", "trs", "chat", "srt"}:
         return "oral/transcription"
@@ -1114,9 +1134,9 @@ def _run_convert(
         api_result["from_format"] = in_fmt_name
         api_result["to_format"] = out_fmt_name
 
-    # Heuristic: DOCX/hOCR → .xml should default to TEITOK-style TEI,
-    # since load_docx/load_hocr produce a ready-made TEITOK TEI tree.
-    if args.to_format is None and out_fmt_name == "tei" and in_fmt_name in ("docx", "hocr"):
+    # Heuristic: DOCX/hOCR/XPDF → .xml should default to TEITOK-style TEI,
+    # since load_docx/load_hocr/load_xpdf produce a ready-made TEITOK TEI tree.
+    if args.to_format is None and out_fmt_name == "tei" and in_fmt_name in ("docx", "hocr", "xpdf"):
         out_fmt_name = "teitok"
 
     if os.path.isfile(output_path) and not getattr(args, "force", False):

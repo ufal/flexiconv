@@ -10,9 +10,8 @@ This implements the core mapping:
 The resulting TEI tree is stored in Document.meta["_teitok_tei_root"] so that save_teitok
 can write it verbatim and round-trip behaviour stays close to the original Perl converter.
 
-Non-tokenized lines (TextLine without Word children) and PAGE @custom-based inline
-annotations are currently not converted; their text is appended as plain content in the
-surrounding <div>. This covers the common "tokenized PAGE with Word elements" case.
+Non-tokenized lines (TextLine without Word children) emit plain text after each <lb>.
+PAGE @custom-based inline annotations are not converted yet.
 """
 from __future__ import annotations
 
@@ -239,16 +238,12 @@ def pagexml_to_tei_tree(
                             if last_tok_for_word is not None and w_idx < len(words) - 1:
                                 last_tok_for_word.tail = " "
                 else:
-                    # Non-tokenized lines: append raw line text into the div (no inline markup for now)
+                    # Non-tokenized lines: line text follows the <lb> (same position as <tok> on tokenized lines)
                     unicode_elems = line.xpath("./*[local-name()='TextEquiv']/*[local-name()='Unicode']")
                     linetext = _text_content(unicode_elems[0]) if unicode_elems else ""
                     linetext = linetext.strip()
                     if linetext:
-                        # Keep a leading space so it doesn't glue to previous token
-                        if div.text:
-                            div.text += " " + linetext
-                        else:
-                            div.text = linetext
+                        lb.tail = (lb.tail or "") + linetext
 
     return tei
 

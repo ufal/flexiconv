@@ -158,6 +158,8 @@ def run_convert(
     if in_fmt_name == "vert":
         loader_kwargs["spacing_mode"] = opts.get("spacing_mode", "guess")
         loader_kwargs["split_on_doc"] = not opts.get("vert_no_doc_split", True)
+    if in_fmt_name in ("pdf", "xpdf"):
+        loader_kwargs["options"] = opts
     if opts.get("option") and in_fmt_name == "vert":
         for part in (opts["option"] or "").split(";"):
             part = part.strip()

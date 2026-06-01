@@ -556,13 +556,17 @@ def load_pdf(
 ) -> Document:
     """Load a PDF file into a pivot Document.
 
-    Options are currently unused but reserved for future pdf-specific tuning.
+    Options (via ``--option``):
+    - ``pdf=smart`` (default): pdfminer layout heuristics (paragraphs, tables, styles).
+    - ``pdf=simple``: plain paragraphs per text block.
+    - ``pdf=bbox``: word-level coordinates via Poppler ``pdftotext -bbox-layout``.
     """
-    # Parse pdf-specific options: pdf=smart|simple and TEI cleanup: tei=clean|noclean
+    # Parse pdf-specific options: pdf=smart|simple|bbox and TEI cleanup: tei=clean|noclean
     smart = True
     tidy_hi = True
+    bbox_mode = False
     if options:
-        opt_raw = (options.get("pdf") or options.get("option") or "").strip()
+        opt_raw = (options.get("option") or options.get("pdf") or "").strip()
         if opt_raw:
             for part in opt_raw.split(";"):
                 part = part.strip()
@@ -577,14 +581,18 @@ def load_pdf(
                             smart = False
                         elif val in {"smart", "1"}:
                             smart = True
+                        elif val in {"bbox", "bbox-layout", "xpdf"}:
+                            bbox_mode = True
                     elif key in {"tidyhi", "tidy_hi", "tidy"}:
                         tidy_hi = val not in {"0", "false", "no"}
                 else:
                     low = part.lower()
-                    if low in {"pdf=simple", "pdf=nosmart", "pdf=0"}:
+                    if low in {"pdf=simple", "pdf=nosmart", "pdf=0", "simple", "nosmart", "0"}:
                         smart = False
-                    elif low in {"pdf=smart", "pdf=1"}:
+                    elif low in {"pdf=smart", "pdf=1", "smart", "1"}:
                         smart = True
+                    elif low in {"pdf=bbox", "pdf=bbox-layout", "pdf=xpdf", "bbox", "bbox-layout", "xpdf"}:
+                        bbox_mode = True
 
         # Also allow explicit TEI cleanup control via tei=clean|noclean
         if "tei=" in opt_raw:
@@ -600,6 +608,16 @@ def load_pdf(
                         tidy_hi = True
                     elif val in {"noclean", "0", "no", "false", "raw"}:
                         tidy_hi = False
+
+    if bbox_mode:
+        from .xpdf import load_pdf_bbox
+
+        return load_pdf_bbox(
+            path,
+            doc_id=doc_id,
+            orgfile=orgfile or path,
+            options=options,
+        )
 
     tei_root, used_image_dir = pdf_to_tei_tree(
         path,

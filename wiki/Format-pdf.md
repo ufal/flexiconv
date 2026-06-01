@@ -32,6 +32,10 @@ Handled by `flexiconv/io/pdf.py` (optional extra: `flexiconv[pdf]`).
   - `pdf=simple` / `pdf=nosmart` / `pdf=0`: simpler interpretation:
     - paragraphs per text block/line,
     - minimal heuristics; fewer lists/tables/headings inferred.
+  - `pdf=bbox` / `pdf=bbox-layout` / `pdf=xpdf`: word-level coordinates via Poppler `pdftotext -bbox-layout`, with `<pb facs="…">` and bboxes scaled to page image pixels (not PDF points). Options (semicolon-separated):
+    - `dpi=200` (default): render page PNGs with `pdftoppm` when no images are found beside the PDF.
+    - `images=/path/to/dir`: directory to search for page images (`{basename}-1_1.png`, …).
+    - `render=no`: do not render; require existing page images.
   - `tei=clean` / `tei=noclean`:
     - `tei=clean` (default) tidies spaces around `<hi>` spans so trailing spaces are moved into `tail` (better pretty-printing).
     - `tei=noclean` keeps `<hi>` text exactly as pdfminer delivered it.

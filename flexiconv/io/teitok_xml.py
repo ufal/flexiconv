@@ -532,7 +532,9 @@ def _relocate_external_assets(document: Document, tei_root: etree._Element, effe
     # Best-effort cleanup for temporary image dirs we created ourselves.
     try:
         base_src = os.path.basename(os.path.normpath(src_dir))
-        if base_src.startswith(("flexiconv_docx_", "flexiconv_pdf_", "flexiconv_epub_")):
+        if base_src.startswith(
+            ("flexiconv_docx_", "flexiconv_pdf_", "flexiconv_epub_", "flexiconv_pdf_pages_")
+        ):
             shutil.rmtree(src_dir)
     except OSError:
         pass
@@ -593,6 +595,10 @@ def save_teitok(
         if strip_styles:
             _strip_style_attributes(stored_tei)
         _relocate_external_assets(document, stored_tei, effective_path)
+        if document.meta.get("_teitok_image_dir"):
+            from .xpdf import copy_facs_images
+
+            copy_facs_images(document, stored_tei, effective_path)
         tree = etree.ElementTree(stored_tei)
         _write_teitok_xml(effective_path, tree, prettyprint=prettyprint)
         return

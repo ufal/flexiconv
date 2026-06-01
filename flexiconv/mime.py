@@ -28,7 +28,10 @@ def detect_mime(path: str) -> Optional[str]:
         return "application/xml"
     if b"{\\rtf" in snippet[:32]:
         return "application/rtf"
-    if b"<html" in lower:
+    if b"<html" in lower or b"<doc>" in lower or b"<doc " in lower:
+        # XPDF bbox-layout (pdftotext -bbox-layout)
+        if b"xmin=" in lower and b"<page" in lower and (b"<doc>" in lower or b"<doc " in lower):
+            return "application/vnd.xpdf-bbox+html"
         # Prefer hOCR when ocr_page/ocrx_word present
         if b"ocr_page" in lower or b"ocrx_word" in lower:
             return "application/vnd.hocr+html"
@@ -49,6 +52,8 @@ def mime_to_format(mime: str) -> Optional[str]:
         return "rtf"
     if mime in {"application/vnd.hocr+html"}:
         return "hocr"
+    if mime in {"application/vnd.xpdf-bbox+html"}:
+        return "xpdf"
     if mime in {"text/html", "application/xhtml+xml"}:
         return "html"
     if mime in {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}:
@@ -97,6 +102,22 @@ def describe_unsupported_mime(mime: str) -> str:
     return f"MIME type '{mime}' is recognised but not currently supported for reading/writing."
 
 
+def _sniff_html_format(path: str) -> Optional[str]:
+    """Detect hOCR vs XPDF bbox-layout vs generic HTML from file content."""
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            snippet = f.read(8192)
+    except OSError:
+        return None
+    lowered = snippet.lower()
+    if "ocr_page" in lowered or "ocrx_word" in lowered:
+        return "hocr"
+    if ("<doc>" in lowered or "<doc " in lowered) and "<page" in lowered:
+        if re.search(r'<word\s+[^>]*xmin\s*=', lowered):
+            return "xpdf"
+    return "html"
+
+
 _EXT_TO_INPUT = {
     ".rtf": "rtf",
     ".docx": "docx",
@@ -107,6 +128,7 @@ _EXT_TO_INPUT = {
     ".htm": "html",
     ".xhtml": "html",
     ".hocr": "hocr",
+    ".xpdf.html": "xpdf",
     ".page.xml": "pagexml",
     ".txt": "txt",
     ".md": "md",
@@ -144,6 +166,7 @@ _EXT_TO_OUTPUT = {
     ".htm": "html",
     ".xhtml": "html",
     ".hocr": "hocr",
+    ".xpdf.html": "xpdf",
     ".txt": "txt",
     ".xml": "teitok",
     ".tei": "tei",
@@ -161,6 +184,8 @@ def path_to_input_format(path: str) -> Optional[str]:
     if path_lower.endswith(".webanno.tsv"):
         return "webanno"
     ext = os.path.splitext(path)[1].lower()
+    if ext in (".html", ".htm", ".xhtml"):
+        return _sniff_html_format(path)
     if ext in _EXT_TO_INPUT:
         return _EXT_TO_INPUT[ext]
     if ext in (".xml", ".tei"):
@@ -246,6 +271,9 @@ def path_to_input_format(path: str) -> Optional[str]:
 
 def path_to_output_format(path: str) -> Optional[str]:
     """Infer output format from path (extension only)."""
+    path_lower = path.lower()
+    if path_lower.endswith(".xpdf.html"):
+        return "xpdf"
     ext = os.path.splitext(path)[1].lower()
     return _EXT_TO_OUTPUT.get(ext)
 
