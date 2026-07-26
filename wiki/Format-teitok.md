@@ -21,10 +21,10 @@ Flexiconv’s TEITOK support lives mainly in `flexiconv/io/teitok_xml.py`.
     <body>
       <div>
         <s id="s-1">
-          <tok xml:id="w-1" lemma="The" upos="DET">The</tok>
-          <tok xml:id="w-2" lemma="cat" upos="NOUN">cat</tok>
-          <tok xml:id="w-3" lemma="sit" upos="VERB" head="2" deprel="root">sat</tok>
-          <tok xml:id="w-4" lemma="." upos="PUNCT">.</tok>
+          <tok xml:id="w-1" lemma="the" upos="DET" head="w-2" deprel="det">The</tok>
+          <tok xml:id="w-2" lemma="cat" upos="NOUN" head="w-3" deprel="nsubj">cat</tok>
+          <tok xml:id="w-3" lemma="sit" upos="VERB" deprel="root">sat</tok>
+          <tok xml:id="w-4" lemma="." upos="PUNCT" head="w-3" deprel="punct">.</tok>
         </s>
       </div>
     </body>

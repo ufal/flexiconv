@@ -180,6 +180,10 @@ def run_convert(
     except Exception as e:
         return ConvertResult(success=False, error_message=str(e), stderr_snippet=None)
 
+    if in_fmt_name == "conllu":
+        from .io.conllu import apply_conllu_teitok_options
+        apply_conllu_teitok_options(doc, opts.get("option"))
+
     if progress_callback:
         progress_callback(1, 1, "Saving...")
 

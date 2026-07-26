@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import hashlib
 import os
 import re
@@ -136,17 +135,22 @@ def _write_teitok_xml(path: str, tree: etree._ElementTree, *, prettyprint: bool 
     """
     root = tree.getroot()
 
-    # Pretty-print header only: serialize TEI without <text>, then append <text> without pretty_print.
-    root_copy = copy.deepcopy(root)
-    for child in list(root_copy):
-        if (child.tag or "").endswith("text"):
-            root_copy.remove(child)
-    header_buf = BytesIO()
-    etree.ElementTree(root_copy).write(
-        header_buf, encoding="utf-8", xml_declaration=True, pretty_print=True
-    )
-    out = header_buf.getvalue().decode("utf-8")
-    text_el = next((c for c in root if (c.tag or "").endswith("text")), None)
+    # Pretty-print header only: temporarily detach <text> (no deepcopy — that is
+    # prohibitively expensive for large tokenized TEI trees).
+    text_els = [c for c in list(root) if (c.tag or "").endswith("text")]
+    for text_el in text_els:
+        root.remove(text_el)
+    try:
+        header_buf = BytesIO()
+        etree.ElementTree(root).write(
+            header_buf, encoding="utf-8", xml_declaration=True, pretty_print=True
+        )
+        out = header_buf.getvalue().decode("utf-8")
+    finally:
+        for text_el in text_els:
+            root.append(text_el)
+
+    text_el = text_els[0] if text_els else None
     if text_el is not None:
         if prettyprint:
             # Expand existing space tails between tokens into ' \n  ' for readability.
@@ -209,9 +213,8 @@ def _write_teitok_xml(path: str, tree: etree._ElementTree, *, prettyprint: bool 
                 if "\n" not in tail:
                     last.tail = tail + "\n"
 
-        # Serialize a copy so no parent context (e.g. "</TEI>") is included.
-        text_copy = copy.deepcopy(text_el)
-        text_str = etree.tostring(text_copy, encoding="unicode", pretty_print=False)
+        # tostring on the element itself does not include parent context.
+        text_str = etree.tostring(text_el, encoding="unicode", pretty_print=False)
         last_close = out.rfind("</TEI>")
         out = out[:last_close] + "\n  " + text_str + "\n</TEI>"
     with open(path, "w", encoding="utf-8") as f:
@@ -302,7 +305,7 @@ def load_teitok(path: str, *, doc_id: Optional[str] = None) -> Document:
         features = {
             "form": form,
         }
-        for attr in ("lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "reg", "expan", "corr", "trslit", "lex", "nform", "ort", "gram", "opos", "olemma"):
+        for attr in ("lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "ord", "ohead", "reg", "expan", "corr", "trslit", "lex", "nform", "ort", "gram", "opos", "olemma"):
             val = t.get(attr)
             if val is not None:
                 features[attr] = val
@@ -636,6 +639,11 @@ def save_teitok(
     etree.SubElement(rev, "change", who="flexiconv", when=when).text = (
         f"Converted from {source_filename} by flexiconv" if source_filename else "Converted by flexiconv"
     )
+    chunk_revision = document.meta.get("_conllu_chunk_revision")
+    if chunk_revision:
+        etree.SubElement(rev, "change", who="flexiconv", when=when, n="chunk").text = str(
+            chunk_revision
+        )
 
     text_el = etree.SubElement(tei, "text")
     body_el = etree.SubElement(text_el, "body")
@@ -665,38 +673,57 @@ def save_teitok(
         """Append <s><tok>...</tok></s> to p_el for the given token list."""
         if not tok_list:
             return
+
+        def _emit_tok(s_el: etree._Element, tok: Node) -> None:
+            omit_ord = document.meta.get("_omit_conllu_ord")
+            t_attrs = {"id": tok.id}
+            for k, v in tok.features.items():
+                if k in ("form", SPACE_AFTER_FEATURE, "spaceAfter"):
+                    continue
+                if omit_ord and k in ("ord", "ohead"):
+                    continue
+                t_attrs[k] = str(v)
+            t_el = etree.SubElement(s_el, "tok", **t_attrs)
+            t_el.text = str(tok.features.get("form", ""))
+            t_el.tail = " " if (tok.features.get(SPACE_AFTER_FEATURE) or tok.features.get("spaceAfter")) else ""
+
         if sent_layer:
             s_nodes = sorted(
                 sent_layer.nodes.values(),
                 key=lambda n: (n.anchors[0].token_start or 0),
             )
+            # Index tokens by 1-based token position for O(n) sentence packing
+            # (avoids scanning the full token list once per sentence).
+            max_idx = 0
+            for t in tok_list:
+                ts = t.anchors[0].token_start or 0
+                if ts > max_idx:
+                    max_idx = ts
+            by_idx: list[Optional[Node]] = [None] * (max_idx + 1)
+            for t in tok_list:
+                ts = t.anchors[0].token_start or 0
+                if ts >= 0:
+                    by_idx[ts] = t
+
             for s in s_nodes:
                 start = s.anchors[0].token_start or 0
                 end = s.anchors[0].token_end or 0
-                in_this = [t for t in tok_list if (t.anchors[0].token_start or 0) >= start and (t.anchors[0].token_start or 0) <= end]
+                if start < 0:
+                    start = 0
+                if end > max_idx:
+                    end = max_idx
+                in_this = [by_idx[i] for i in range(start, end + 1) if by_idx[i] is not None]
                 if not in_this:
                     continue
                 if len(p_el) > 0:
                     p_el[-1].tail = "\n    "
                 s_el = etree.SubElement(p_el, "s", id=s.id)
                 for tok in in_this:
-                    t_attrs = {"id": tok.id}
-                    for k, v in tok.features.items():
-                        if k not in ("form", SPACE_AFTER_FEATURE, "spaceAfter"):
-                            t_attrs[k] = str(v)
-                    t_el = etree.SubElement(s_el, "tok", **t_attrs)
-                    t_el.text = str(tok.features.get("form", ""))
-                    t_el.tail = " " if (tok.features.get(SPACE_AFTER_FEATURE) or tok.features.get("spaceAfter")) else ""
+                    _emit_tok(s_el, tok)
         else:
             s_el = etree.SubElement(p_el, "s", id="s-1")
             for tok in tok_list:
-                t_attrs = {"id": tok.id}
-                for k, v in tok.features.items():
-                    if k not in ("form", SPACE_AFTER_FEATURE, "spaceAfter"):
-                        t_attrs[k] = str(v)
-                t_el = etree.SubElement(s_el, "tok", **t_attrs)
-                t_el.text = str(tok.features.get("form", ""))
-                t_el.tail = " " if (tok.features.get(SPACE_AFTER_FEATURE) or tok.features.get("spaceAfter")) else ""
+                _emit_tok(s_el, tok)
 
     if has_structure:
         # Structure nodes in document order; use node.type for TEI element (head, list/item, quote, p).

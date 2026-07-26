@@ -31,9 +31,21 @@ Flexiconv maps Page → surface, TextRegion/TextLine → zones, Word → `<tok>`
 ## Conversion semantics
 
 - **Reading (`pagexml` input)**:
-  - Page → `<pb>`/`<surface>`; regions and lines → `<zone>`; words → `<tok>` with coordinates. Image reference from PAGE is kept in facsimile when present.
+  - Page → `<pb>`/`<surface>` (`<pb corresp="#facs-N">` links to the surface); regions and lines → `<zone>`; words → `<tok>` with coordinates. Image reference from PAGE is kept in facsimile when present.
   - `TextRegion/@type` or `structure {type:…;}` in `@custom` → `type` on the TEI `<div>` (and `subtype` on the matching facsimile zone). `readingOrder {index:…;}` reorders regions on the page.
   - Punctuation splitting can be applied at word level (configurable).
 
 - **Writing (`pagexml` output)**:
   - Not implemented; conversion is one-way to TEITOK TEI.
+
+## Merging per-page files
+
+Transkribus and similar tools often export one PageXML file per page in a folder. Flexiconv can merge those into a single TEITOK XML (with sequential `<pb>` breaks and shared facsimile ids), using the same mapping as a multi-page PageXML file:
+
+```bash
+flexiconv path/to/page/ merged.xml -f pagexml -t teitok --pagexml-merge
+```
+
+Files are sorted in natural order (`page-2` before `page-10`). Use `-R` to include subdirectories. Equivalent: `--option merge` with `-f pagexml`.
+
+Without `--pagexml-merge`, `-R` on a directory writes one TEITOK file per PageXML input (batch mode).

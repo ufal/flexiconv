@@ -814,6 +814,14 @@ def _make_convert_parser(prog: str = "flexiconv convert") -> argparse.ArgumentPa
         help="hOCR: merge word- at line end with next line's first word into one <tok><gtok><lb/><gtok></tok>.",
     )
     p.add_argument(
+        "--pagexml-merge",
+        action="store_true",
+        help=(
+            "PageXML: merge per-page files from a directory into one TEITOK XML "
+            "(also: --option merge with -f pagexml). Requires OUTPUT to be a file path."
+        ),
+    )
+    p.add_argument(
         "--spacing-mode",
         "--spacing_mode",
         choices=("guess", "none"),
@@ -844,7 +852,10 @@ def _make_convert_parser(prog: str = "flexiconv convert") -> argparse.ArgumentPa
     )
     p.add_argument(
         "--option",
-        help="Format-specific option (e.g. TMX: join|annotate).",
+        help=(
+            "Format-specific option (e.g. TMX: join|annotate; "
+            "CoNLL-U→TEITOK: split | max_tokens=N | max_sentences=N)."
+        ),
     )
     p.add_argument(
         "--prettyprint",
@@ -900,6 +911,55 @@ def _run_convert(
     if api_result is not None:
         api_result["input"] = os.path.abspath(input_path)
     output_path = args.output
+
+    opt_val = getattr(args, "option", None)
+    want_pagexml_merge = getattr(args, "pagexml_merge", False) or (
+        opt_val is not None and opt_val.lower() == "merge"
+    )
+
+    if want_pagexml_merge and not os.path.isdir(input_path):
+        abs_in = os.path.abspath(input_path)
+        if not os.path.exists(input_path):
+            return _fail(f"PageXML merge input directory not found: {abs_in}")
+        return _fail(f"PageXML merge requires INPUT to be a directory: {abs_in}")
+
+    # PageXML merge: combine per-page files in a directory into one TEITOK XML.
+    if os.path.isdir(input_path) and want_pagexml_merge:
+        in_fmt_name = args.from_format or "pagexml"
+        if in_fmt_name != "pagexml":
+            return _fail("PageXML merge only supports -f pagexml input.")
+        out_fmt_name = args.to_format or "teitok"
+        if out_fmt_name not in ("teitok", "tei"):
+            return _fail(
+                "PageXML merge currently only supports TEITOK XML output; omit -t or use --to teitok."
+            )
+        if out_fmt_name == "tei":
+            out_fmt_name = "teitok"
+        if output_path is None or os.path.isdir(output_path):
+            return _fail(
+                "PageXML merge requires OUTPUT to be a single file path (not a directory)."
+            )
+        if os.path.isfile(output_path) and not getattr(args, "force", False):
+            return _fail(
+                f"Refusing to overwrite existing file: {output_path} (use --force)."
+            )
+        from .io.page_xml import merge_pagexml_dir_to_teitok
+
+        try:
+            written = merge_pagexml_dir_to_teitok(
+                input_path,
+                output_path,
+                recursive=getattr(args, "recursive", False),
+                prettyprint=getattr(args, "prettyprint", False),
+                force=getattr(args, "force", False),
+            )
+        except (ValueError, FileExistsError) as exc:
+            return _fail(str(exc))
+        if args.verbose:
+            sys.stderr.write(
+                f"[flexiconv] PageXML merge wrote {written}\n"
+            )
+        return 0
 
     # Directory + --recursive: batch-convert all files under INPUT.
     if os.path.isdir(input_path) and getattr(args, "recursive", False):
@@ -1019,7 +1079,6 @@ def _run_convert(
     in_fmt_name = args.from_format or _detect_input_format(input_path)
 
     # If TMX + --option split: special-case multi-output behaviour (one TEI per language).
-    opt_val = getattr(args, "option", None)
     if in_fmt_name == "tmx" and opt_val is not None and opt_val.lower() == "split":
         if output_path is None or not os.path.isdir(output_path):
             return _fail(
@@ -1034,25 +1093,111 @@ def _run_convert(
             )
         return 0
 
-    # If CoNLL-U + --option split: one TEI per # newtext block.
-    if in_fmt_name == "conllu" and opt_val is not None and opt_val.lower() == "split":
-        if output_path is None or not os.path.isdir(output_path):
-            return _fail(
-                "CoNLL-U split mode requires OUTPUT to be an existing directory (one TEI per # newtext will be written there)."
-            )
-        # Only teitok output is meaningful for split at the moment.
-        if args.to_format not in (None, "teitok"):
-            return _fail(
-                "CoNLL-U split mode currently only supports TEITOK XML output; omit -t or use --to teitok."
-            )
-        from .io.conllu import split_conllu_to_teitok_files
+    # If CoNLL-U + --option split / max_tokens / max_sentences: multi-file TEITOK.
+    if in_fmt_name == "conllu" and opt_val is not None:
+        want_split = False
+        max_tokens_opt: Optional[int] = None
+        max_sentences_opt: Optional[int] = None
+        for part in opt_val.split(";"):
+            part = part.strip()
+            if not part:
+                continue
+            if "=" not in part:
+                if part.lower() == "split":
+                    want_split = True
+                continue
+            key, val = part.split("=", 1)
+            key = key.strip().lower().replace("-", "_")
+            val = val.strip()
+            if not val:
+                continue
+            if key == "split" and val.lower() in {"1", "true", "yes", "newtext", "newdoc"}:
+                want_split = True
+            elif key in {"max_tokens", "maxtokens", "max_toks"}:
+                try:
+                    max_tokens_opt = int(val.replace("_", ""))
+                except ValueError:
+                    return _fail(
+                        f"CoNLL-U option {key}={val!r} must be an integer (e.g. max_tokens=100000)."
+                    )
+            elif key in {"max_sentences", "maxsentences", "max_sents"}:
+                try:
+                    max_sentences_opt = int(val.replace("_", ""))
+                except ValueError:
+                    return _fail(
+                        f"CoNLL-U option {key}={val!r} must be an integer (e.g. max_sentences=10000)."
+                    )
 
-        written = split_conllu_to_teitok_files(input_path, output_path)
-        if args.verbose:
-            sys.stderr.write(
-                f"[flexiconv] CoNLL-U split wrote {len(written)} files into {output_path}\n"
-            )
-        return 0
+        want_chunk = max_tokens_opt is not None or max_sentences_opt is not None
+        if want_split or want_chunk:
+            if output_path is None or not os.path.isdir(output_path):
+                return _fail(
+                    "CoNLL-U split/chunk mode requires OUTPUT to be an existing directory "
+                    "(one TEI per chunk will be written there)."
+                )
+            if args.to_format not in (None, "teitok"):
+                return _fail(
+                    "CoNLL-U split/chunk mode currently only supports TEITOK XML output; "
+                    "omit -t or use --to teitok."
+                )
+            if want_chunk:
+                if max_tokens_opt is not None and max_tokens_opt <= 0:
+                    return _fail("CoNLL-U max_tokens must be a positive integer.")
+                if max_sentences_opt is not None and max_sentences_opt <= 0:
+                    return _fail("CoNLL-U max_sentences must be a positive integer.")
+                from .io.conllu import chunk_conllu_to_teitok_files
+
+                limits = []
+                if max_tokens_opt is not None:
+                    limits.append(f"max_tokens={max_tokens_opt}")
+                if max_sentences_opt is not None:
+                    limits.append(f"max_sentences={max_sentences_opt}")
+                if args.verbose:
+                    try:
+                        size_mb = os.path.getsize(input_path) / (1024 * 1024)
+                        size_note = f", {size_mb:.1f} MiB"
+                    except OSError:
+                        size_note = ""
+                    sys.stderr.write(
+                        f"[flexiconv] CoNLL-U chunk ({', '.join(limits)}{size_note}) "
+                        f"→ {output_path}\n"
+                    )
+                    sys.stderr.flush()
+
+                def _chunk_progress(current: int, total: int, message: str) -> None:
+                    if total > 0:
+                        pct = 100.0 * current / total
+                        sys.stderr.write(
+                            f"[flexiconv] {message} [{pct:5.1f}%]\n"
+                        )
+                    else:
+                        sys.stderr.write(f"[flexiconv] {message}\n")
+                    sys.stderr.flush()
+
+                written = chunk_conllu_to_teitok_files(
+                    input_path,
+                    output_path,
+                    max_tokens=max_tokens_opt,
+                    max_sentences=max_sentences_opt,
+                    progress_callback=_chunk_progress if args.verbose else None,
+                    conllu_option=opt_val,
+                )
+                if args.verbose:
+                    sys.stderr.write(
+                        f"[flexiconv] CoNLL-U chunk ({', '.join(limits)}) "
+                        f"wrote {len(written)} files into {output_path}\n"
+                    )
+            else:
+                from .io.conllu import split_conllu_to_teitok_files
+
+                written = split_conllu_to_teitok_files(
+                    input_path, output_path, conllu_option=opt_val
+                )
+                if args.verbose:
+                    sys.stderr.write(
+                        f"[flexiconv] CoNLL-U split wrote {len(written)} files into {output_path}\n"
+                    )
+            return 0
 
     # If VERT + --option split: one TEI per <doc>/<text> block.
     if in_fmt_name == "vert" and opt_val is not None:

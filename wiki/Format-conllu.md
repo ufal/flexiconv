@@ -27,7 +27,10 @@ Handled by `flexiconv/io/conllu.py`.
 
 - **Reading (`conllu` input)**:
   - Each token line → `<tok>` with `lemma`, `upos`, `xpos`, `feats`, `head`, `deprel`. Sentence boundaries from blank lines; `# sent_id`, `# text` → sentence/metadata. Multi-word tokens and empty nodes are supported.
-  - With `--option split`, one TEI file per `# newdoc` block is written to an output directory.
+  - CoNLL-U sentence-local `HEAD` / `DEPS` ordinals are remapped to TEITOK token `@id` values (e.g. `3` → `w-12`). Root (`HEAD=0`) omits `@head`. Token ids follow TEITOK convention (`w-1`, `w-2`, …), or `tokId` from MISC when present. Original CoNLL-U ordinals are kept as `ord` / `ohead` on each `<tok>` for validation (as in teitok-tools `conllu2teitok.pl`; omit with `--option ord=no`).
+  - Multi-file TEITOK output (OUTPUT must be an existing directory; `-t teitok`):
+    - `--option split` — one TEI file per `# newtext` block.
+    - `--option max_tokens=N` and/or `max_sentences=N` — pack sentences into chunks that stay under the given limits (a single oversized sentence still becomes its own file). `# newdoc` / `# newtext` are hard boundaries. Example: `--option "max_tokens=100000;max_sentences=10000"`. Each output file records the chunk in `revisionDesc` (a second `<change n="chunk">`).
 
 - **Writing (`conllu` output)**:
-  - Pivot/TEITOK tokens and sentences → CoNLL-U lines. `space_after` is reflected as `SpaceAfter=No` in MISC. Use `-t conllu` to export.
+  - Pivot/TEITOK tokens and sentences → CoNLL-U lines. TEITOK-style `@head` / `@deps` token ids are converted back to sentence-local ordinals. `space_after` is reflected as `SpaceAfter=No` in MISC. Use `-t conllu` to export.
