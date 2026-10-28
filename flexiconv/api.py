@@ -163,8 +163,13 @@ def run_convert(
     if opts.get("option") and in_fmt_name == "opus":
         for part in (opts["option"] or "").split(";"):
             key, _, val = part.partition("=")
-            if key.strip().lower() == "lang" and val.strip():
-                loader_kwargs["lang"] = val.strip()
+            key, val = key.strip().lower(), val.strip()
+            if key == "lang" and val:
+                loader_kwargs["lang"] = val
+            elif key == "spacing" and val:
+                loader_kwargs["spacing_mode"] = val
+            elif key == "combining" and val:
+                loader_kwargs["combining"] = val
     if opts.get("option") and in_fmt_name == "vert":
         for part in (opts["option"] or "").split(";"):
             part = part.strip()
