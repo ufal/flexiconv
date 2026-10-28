@@ -160,6 +160,11 @@ def run_convert(
         loader_kwargs["split_on_doc"] = not opts.get("vert_no_doc_split", True)
     if in_fmt_name in ("pdf", "xpdf"):
         loader_kwargs["options"] = opts
+    if opts.get("option") and in_fmt_name == "opus":
+        for part in (opts["option"] or "").split(";"):
+            key, _, val = part.partition("=")
+            if key.strip().lower() == "lang" and val.strip():
+                loader_kwargs["lang"] = val.strip()
     if opts.get("option") and in_fmt_name == "vert":
         for part in (opts["option"] or "").split(";"):
             part = part.strip()

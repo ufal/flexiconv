@@ -337,6 +337,16 @@ def _register_builtin_formats() -> None:
     )
     registry.register_input(
         InputFormat(
+            name="opus",
+            aliases=("opus-xml",),
+            loader=_lazy_loader("flexiconv.io.opus", "load_opus"),
+            description="OPUS corpus documents (XML, gzipped or not); sentence ids kept for the XCES alignments "
+                        "(--option lang=xx: the document's language).",
+            data_type="translation",
+        )
+    )
+    registry.register_input(
+        InputFormat(
             name="conllu",
             aliases=("conll-u",),
             loader=_lazy_loader("flexiconv.io.conllu", "load_conllu"),
@@ -853,7 +863,7 @@ def _make_convert_parser(prog: str = "flexiconv convert") -> argparse.ArgumentPa
     p.add_argument(
         "--option",
         help=(
-            "Format-specific option (e.g. TMX: join|annotate; "
+            "Format-specific option (e.g. TMX: join|annotate; OPUS: lang=xx; "
             "CoNLL-U→TEITOK: split | max_tokens=N | max_sentences=N)."
         ),
     )
