@@ -26,7 +26,8 @@ converted documents as they are (flexalign merge).
   grouping words keep their words inside), and outside them (headings, notes without sentences).
 - Ids: `<s>` and `<w>` keep theirs (the alignments point at them); every other element's `id` becomes `n`, so it
   cannot clash with them.
-- `lang`: the document's language (OPUS has it in the path, `en/…`), set on `<text>`.
+- `lang`: the document's language (OPUS has it in the path, `en/…`): `<language ident>` in the header's
+  `langUsage`, where TEITOK reads it, and `@lang` on `<text>`.
 """
 
 from __future__ import annotations
@@ -212,6 +213,17 @@ def _build_tei_from_opus(path: str, *, lang: Optional[str] = None, spacing_mode:
     text_el = etree.SubElement(tei, "text", id=root.get("id") or stem)
     if lang:
         text_el.set("lang", lang)
+        # TEITOK's place for the document language (settings read it: //langUsage/language/@ident)
+        header = tei.find("teiHeader")
+        profile = header.find("profileDesc")
+        if profile is None:
+            profile = etree.Element("profileDesc")
+            filedesc = header.find("fileDesc")
+            header.insert(list(header).index(filedesc) + 1 if filedesc is not None else 0, profile)
+        usage = profile.find("langUsage")
+        if usage is None:
+            usage = etree.SubElement(profile, "langUsage")
+        etree.SubElement(usage, "language", ident=lang).text = lang
     body = etree.SubElement(text_el, "body")
     if _local(root.tag).lower() == "s":
         _sentence(root, body, opts)
