@@ -8,7 +8,8 @@ Entity ids hold within their document, so they are written with the document's i
 
 Out: each mention's head token gets the entity id in the feature `coref` ('|'-joined when it heads several), the
 multivalue attribute that pando's equivalence layer `coref` is declared over (flexencoder's CorefUD rule writes the
-same). The raw `misc_Entity` stays on the tokens.
+same), and the layer `mentions` holds every mention (eid, etype, head token) over its tokens (the TEITOK writer puts
+them in as <mention> elements, teitok_spans.py). The raw `misc_Entity` stays on the tokens.
 """
 
 from __future__ import annotations
@@ -115,4 +116,17 @@ def apply_corefud(doc, *, doc_id: str, global_entity: Optional[str] = None) -> i
         node = by_index.get(idx)
         if node is not None:
             node.features["coref"] = "|".join(ids)
+    from ..core.model import Anchor, AnchorType, Node
+
+    layer = doc.get_or_create_layer("mentions")
+    for k, m in enumerate(mentions, start=1):
+        head = by_index.get(head_of(m))
+        features = {"eid": f"{doc_id}:{m.eid}"}
+        if m.etype:
+            features["etype"] = m.etype
+        if head is not None:
+            features["head"] = head.id
+        nid = f"m-{k}"
+        layer.nodes[nid] = Node(id=nid, type="mention", features=features,
+                                anchors=[Anchor(type=AnchorType.TOKEN, token_start=m.start, token_end=m.end)])
     return len(mentions)

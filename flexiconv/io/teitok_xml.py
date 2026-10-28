@@ -853,6 +853,14 @@ def save_teitok(
             p_el = etree.SubElement(body_el, "p")
             _add_tokens_to_p(p_el, tokens, sentences_layer)
 
+    # span layers as inline elements (CorefUD mentions: <mention>, teitok_spans.py)
+    if document.layers.get("mentions"):
+        from .teitok_spans import wrap_spans
+
+        _, left_out = wrap_spans(tei, document, "mentions", "mention")
+        if left_out:
+            document.meta["_mentions_left_out"] = left_out
+
     # Normalise inline spaces and relocate any external assets (images) before writing.
     _tidy_inline_spaces(tei)
     if strip_styles:
