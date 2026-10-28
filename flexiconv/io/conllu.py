@@ -447,6 +447,13 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
         if mapped_deps:
             node.features["deps"] = mapped_deps
 
+    # CorefUD coreference (MISC Entity=): `coref` on the mention heads (corefud.py)
+    if any("misc_Entity" in n.features for n in tokens_layer.nodes.values()):
+        from .corefud import apply_corefud
+
+        cu_doc = file_level_attrs.get("newdoc id") or doc_id or os.path.splitext(os.path.basename(path))[0]
+        apply_corefud(doc, doc_id=cu_doc, global_entity=file_level_attrs.get("global.Entity"))
+
     # Create sentence nodes
     for i, (start, end) in enumerate(sent_token_ranges):
         anchor = Anchor(type=AnchorType.TOKEN, token_start=start, token_end=end)
