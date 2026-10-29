@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PcGts xmlns="http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15 http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15/pagecontent.xsd">
+  <Metadata>
+    <Creator>test</Creator>
+    <Created>2026-06-01T00:00:00</Created>
+  </Metadata>
+  <Page imageFilename="test.jpg" imageWidth="400" imageHeight="500">
+    <TextRegion id="r" custom="readingOrder {index:0;} structure {type:paragraph;}">
+      <Coords points="92,430 92,102 300,102 300,430"/>
+      <TextLine id="l_2" custom="readingOrder {index:0;}">
+        <Coords points="95,124 292,125 292,95 95,94"/>
+        <Baseline points="95,124 292,125"/>
+        <TextEquiv><Unicode>First line of text.</Unicode></TextEquiv>
+      </TextLine>
+      <TextLine id="l_3" custom="readingOrder {index:1;}">
+        <Coords points="94,137 293,139 293,109 94,107"/>
+        <Baseline points="94,137 293,139"/>
+        <TextEquiv><Unicode>Second line of text.</Unicode></TextEquiv>
+      </TextLine>
+      <TextLine id="l_4" custom="readingOrder {index:2;}">
+        <Coords points="94,150 293,151 293,121 94,120"/>
+        <Baseline points="94,150 293,151"/>
+        <TextEquiv><Unicode>Third line of text.</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
