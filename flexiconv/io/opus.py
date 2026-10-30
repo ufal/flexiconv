@@ -105,8 +105,18 @@ def _word_start(text: str) -> bool:
 
 
 def _has_source_spacing(root: etree._Element) -> bool:
-    return any(_local(w.tag).lower() == "w" and "\n" in (w.tail or "") and _space_after(w.tail)
-               for w in root.iter())
+    """The source marks spacing: of the `<w>` that end a line, enough have only spaces before the line break (a
+    space after the word) for that to be the layout, not a stray character (Europarl: one `½` in 95,000 words
+    switched a whole document to "no spaces")."""
+    ending = marked = 0
+    for w in root.iter():
+        if not isinstance(w.tag, str) or _local(w.tag).lower() != "w" or "\n" not in (w.tail or ""):
+            continue
+        ending += 1
+        head = w.tail.split("\n", 1)[0]
+        if head and not head.strip(" \t"):
+            marked += 1
+    return ending > 0 and marked >= max(1, ending // 10)
 
 
 def _has_words(elem: etree._Element) -> bool:
