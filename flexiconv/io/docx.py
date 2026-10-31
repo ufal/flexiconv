@@ -119,12 +119,13 @@ def _get_text_styles(run: Any) -> str:
     return " ".join(parts)
 
 
-def _normalize_line_height(line_spacing: Any, line_spacing_rule: Any) -> float:
-    if line_spacing_rule == 4:  # WD_LINE_SPACING.EXACTLY
-        return line_spacing / 20
+def _normalize_line_height(line_spacing: Any, line_spacing_rule: Any) -> Any:
+    # python-docx gives a fixed spacing (exactly / at least) as a Length (EMU), a multiple as a float
+    if hasattr(line_spacing, "pt"):
+        return f"{line_spacing.pt:g}pt"
     if line_spacing_rule == 5:  # WD_LINE_SPACING.MULTIPLE
         return line_spacing
-    return 1.2
+    return line_spacing if isinstance(line_spacing, (int, float)) else 1.2
 
 
 def _paragraph_to_css(para: Any) -> str:
@@ -223,11 +224,24 @@ def _infer_heading_level(head_el: etree._Element) -> int:
     return 1
 
 
+_RTL_CHARS = re.compile("[֐-׿؀-ۿ܀-ݏיִ-﷿ﹰ-﻿]")
+
+
+def _is_rtl(run: Any) -> bool:
+    """A right-to-left run: Word's <w:rtl/>, or text in Hebrew / Arabic / Syriac script."""
+    rtl = run._element.find("./w:rPr/w:rtl", namespaces=NAMESPACES)
+    if rtl is not None and rtl.get(_qn("w", "val"), "1") not in ("0", "false", "off"):
+        return True
+    return bool(_RTL_CHARS.search(run.text or ""))
+
+
 def _process_run(run: Any, footnote_map: dict[str, str]) -> etree._Element:
     elem = etree.Element("hi")
     styles = _get_color(run) + _get_font_size(run) + _get_text_styles(run)
     if styles:
         elem.set("style", styles.strip())
+    if _is_rtl(run):
+        elem.set("dir", "rtl")
     xml_str = run._element.xml if hasattr(run._element, "xml") else etree.tostring(run._element, encoding="unicode")
     if "w:footnoteReference" in xml_str:
         run_xml = etree.fromstring(run._element.xml) if hasattr(run._element, "xml") else run._element
@@ -326,6 +340,9 @@ def _process_paragraph(
     para_style = _paragraph_to_css(para)
     if para_style:
         p_elem.set("style", para_style)
+    bidi = para._element.find("./w:pPr/w:bidi", namespaces=NAMESPACES)
+    if bidi is not None and bidi.get(_qn("w", "val"), "1") not in ("0", "false", "off"):
+        p_elem.set("dir", "rtl")  # a right-to-left paragraph
 
     lasthi = p_elem
     for child in para._element:
