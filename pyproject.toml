@@ -33,13 +33,17 @@ md = [
 pdf = [
   "pdfminer.six>=20221105",
 ]
+dates = [
+  "convertdate>=2.4",
+  "dateparser>=1.1",
+]
 
 [project.urls]
 Homepage = "https://github.com/ufal/flexiconv"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["flexiconv", "flexiconv.core", "flexiconv.io", "flexiconv.api"]
+include = ["flexiconv", "flexiconv.core", "flexiconv.io", "flexiconv.api", "flexiconv.dates", "flexiconv.dates.readers"]
 
 [project.scripts]
 flexiconv = "flexiconv.cli:main"

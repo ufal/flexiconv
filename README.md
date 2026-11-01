@@ -66,6 +66,7 @@ A **standalone desktop GUI** is available for conversion and (planned) deduplica
 
 - **Pivot model and mapping design**: see [examples/md/FORMATS_AND_MAPPINGS.md](examples/md/FORMATS_AND_MAPPINGS.md); the pivot is implemented in `flexiconv.core.model` and reflected in the format pages under [wiki/](wiki/).
 - **Deduplication**: exact and near-identical duplicate detection, SQLite index, incremental and cross-format — see [wiki/Deduplication.md](wiki/Deduplication.md).
+- **Dates**: messy metadata dates (day/month order, centuries, ranges, other calendars, dates in words) to EDTF in the TEI header, with a review table and byte-preserving writes — see [wiki/Dates.md](wiki/Dates.md).
 - **User-oriented docs and format pages**: see the [wiki/](wiki/) folder; [wiki/README.md](wiki/README.md) is the index. Each supported format has a short page with:
   - Origin and typical use
   - A minimal example

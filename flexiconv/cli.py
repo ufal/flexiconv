@@ -1949,7 +1949,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if api_mode:
         # Currently only support conversion operations in API mode.
-        if argv and argv[0] in ("info", "install", "update", "duplicates"):
+        if argv and argv[0] in ("info", "install", "update", "duplicates", "dates"):
             payload: Dict[str, Any] = {
                 "status": "error",
                 "task": "convert",
@@ -2010,7 +2010,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(json.dumps(api_result))
         return exit_code
 
-    # Subcommands: flexiconv info|install|update|convert|duplicates ...
+    # Subcommands: flexiconv info|install|update|convert|duplicates|dates ...
     if argv:
         cmd = argv[0]
         rest = argv[1:]
@@ -2024,6 +2024,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             return _cmd_convert(rest)
         if cmd == "duplicates":
             return _cmd_duplicates(rest)
+        if cmd == "dates":
+            from .dates.cli import main as dates_main
+            return dates_main(rest)
 
     # Default: convert INPUT [OUTPUT]
     return _run_convert(_make_convert_parser("flexiconv"), argv)

@@ -15,6 +15,7 @@ If you have installed the wrapper, you can run `flexiconv` instead of `python -m
 | `flexiconv INPUT [OUTPUT]` | Single-file conversion (default command) |
 | `flexiconv convert` | Explicit convert subcommand (same core options) |
 | `flexiconv duplicates` | Find exact and near-identical duplicates; build or query an index (see [Deduplication](Deduplication.md)) |
+| `flexiconv dates` | Convert metadata dates to EDTF and write them into the TEI header (see [Dates](Dates.md)) |
 | `flexiconv info` | Inspect formats and their data types |
 | `flexiconv install` | Install optional extras (RTF, TEI-CORPO integration, Annatto) |
 | `flexiconv update` | Show how to upgrade Flexiconv and extras |

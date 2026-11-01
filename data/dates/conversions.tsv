@@ -1,0 +1,58 @@
+original	profile	status	edtf
+1945		ok	1945
+1945-12-02		ok	1945-12-02
+1945/12/02		ok	1945-12-02
+1945-2-3		ok	1945-02-03
+1945-12-02 13:02:45		ok	1945-12-02T13:02:45
+2023-11-16 16:44:00+00:00		ok	2023-11-16T16:44:00+00:00
+13/02/1945		ok	1945-02-13
+02-12-1945		review	1945
+02-12-1945	{"order": "DMY"}	ok	1945-12-02
+12/02/1945	{"order": "MDY"}	ok	1945-12-02
+2.12.1945	{"order": "DMY"}	ok	1945-12-02
+6/27/25 22:26	{"patterns": ["%m/%d/%y %H:%M"], "two_digit_century": 20}	ok	2025-06-27T22:26:00
+27/6/2025 22:57:11	{"patterns": ["%d/%m/%Y %H:%M:%S"]}	ok	2025-06-27T22:57:11
+[1945-12-02]		ok	1945-12-02
+[1945]		ok	1945
+1945?		ok	1945?
+ca. 1550		ok	1550~
+c1550		ok	1550~
+hacia 1550		ok	1550~
+1550s		ok	155X
+1500s		review	15XX
+15XX		ok	15XX
+15..		ok	15XX
+XVI		review	15XX
+XVI	{"century": "hundreds"}	ok	15XX
+s. XVI	{"century": "hundreds"}	ok	15XX
+siglo XVI	{"century": "ordinal"}	ok	1501/1600
+16th century	{"century": "ordinal"}	ok	1501/1600
+XV-XVI	{"century": "hundreds"}	ok	14XX/15XX
+945		ok	0945
+44 BC		ok	-0043
+-44		review	-0044
+1600		ok	1600
+1600	{"round_years": "hundreds"}	ok	16XX
+1712-11-23 - 1734		ok	1712-11-23/1734
+1712-1734		ok	1712/1734
+1933-40		ok	1933/1940
+[930-960]		ok	0930/0960
+1712/13		review	1712/1713
+1712/13	{"slash_years": "dual"}	ok	1713
+1712/13	{"slash_years": "range"}	ok	1712/1713
+before 1734		ok	../1734
+antes de 1734		ok	../1734
+después de 1712		ok	1712/..
+entre 1700 y 1720		ok	1700/1720
+1364 AH		ok	1944-12-17/1945-12-05
+1364	{"calendar": "islamic"}	ok	1944-12-17/1945-12-05
+5706	{"calendar": "hebrew"}	ok	1945-09-08/1946-09-25
+1582-10-04	{"calendar": "julian", "julian_until": "1582-10-04"}	ok	1582-10-14
+1582-10-15	{"calendar": "julian", "julian_until": "1582-10-04"}	ok	1582-10-15
+1712-02-10	{"year_start": "03-25"}	ok	1713-02-10
+2 de desembre de 1945	{"languages": ["es", "ca"]}	review	1945-12-02
+El dia 2 de desembre del año del Señor 1945	{"languages": ["es", "ca"]}	review	1945-12-02
+diciembre de 1945	{"languages": ["es"]}	review	1945-12
+s.f.		empty
+unknown		empty
+aquí		failed
