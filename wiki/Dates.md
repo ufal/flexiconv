@@ -143,7 +143,11 @@ r.status, r.edtf, r.earliest, r.latest, r.best   # 'ok', '1712-11-23/1734', '171
 
 To search the converted dates in a TEITOK project, point the project's date attribute in its CQP
 settings at the attribute Flexiconv wrote (`@when-custom`, or the one named with `--edtf-attr`),
-then reindex: pando reads EDTF values and searches them by their earliest and latest day.
+then reindex: pando reads them as EDTF, each date being the range of days it covers, and queries
+use `earliest()`, `latest()`, `precision()`, `century()` and the like on them (pando's
+PANDO-CQL-Reference, "Dates"). pando's `century()` counts ordinally (1501–1600 is the 16th), so a
+century converted with `--century hundreds` (`XVI` → `15XX`) has no `century()` there: query it with
+`earliest()` / `latest()`.
 
 Other tools (an indexer, for example) can call `convert_date` while they work. Converting beforehand
 with `flexiconv dates` is still the better route: the results can be checked and corrected in the files.
