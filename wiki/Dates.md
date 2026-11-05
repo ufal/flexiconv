@@ -141,6 +141,10 @@ r = convert_date("1712-11-23 - 1734", Profile(order="DMY"))
 r.status, r.edtf, r.earliest, r.latest, r.best   # 'ok', '1712-11-23/1734', '1712-11-23', '1734-12-31', '1723'
 ```
 
+To search the converted dates in a TEITOK project, point the project's date attribute in its CQP
+settings at the attribute Flexiconv wrote (`@when-custom`, or the one named with `--edtf-attr`),
+then reindex: pando reads EDTF values and searches them by their earliest and latest day.
+
 Other tools (an indexer, for example) can call `convert_date` while they work. Converting beforehand
 with `flexiconv dates` is still the better route: the results can be checked and corrected in the files.
 If you do convert on the fly, use a declared profile and treat `review` results as undated.
