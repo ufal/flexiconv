@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use flexiconv in your research, please cite it as below."
+type: software
+title: "flexiconv"
+abstract: "Flexible corpus and document converter with a TEI/TEITOK-compatible pivot format."
+authors:
+  - family-names: Janssen
+    given-names: Maarten
+    affiliation: "Institute of Formal and Applied Linguistics, Charles University"
+license: MIT
+repository-code: "https://github.com/ufal/flexiconv"

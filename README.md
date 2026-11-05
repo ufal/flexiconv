@@ -71,3 +71,8 @@ A **standalone desktop GUI** is available for conversion and (planned) deduplica
   - A minimal example
   - How Flexiconv maps it to TEITOK / the pivot model.
 
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
+If you use flexiconv in research, please cite it: [`CITATION.cff`](CITATION.cff) has the reference (GitHub shows it as "Cite this repository").
