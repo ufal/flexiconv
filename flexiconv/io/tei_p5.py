@@ -78,6 +78,18 @@ def load_tei_p5(path: str, *, doc_id: Optional[str] = None) -> Document:
     return doc
 
 
+def _w_attrs(tok: Node) -> dict:
+    """A token's features as <w> attributes; names that are no XML name are made safe."""
+    from .teitok_xml import _xml_attr_name_ok, _xml_attr_name_safe
+
+    attrs = {"id": tok.id}
+    for k, v in tok.features.items():
+        if k == "form" or k.startswith("_"):
+            continue
+        attrs[k if _xml_attr_name_ok(k) else _xml_attr_name_safe(k)] = str(v)
+    return attrs
+
+
 def save_tei_p5(document: Document, path: str) -> None:
     """Very simple TEI P5 exporter (tokens and sentences only)."""
     NSMAP = {None: "http://www.tei-c.org/ns/1.0"}
@@ -130,21 +142,13 @@ def save_tei_p5(document: Document, path: str) -> None:
             for tok in tokens:
                 ti = tok.anchors[0].token_start or 0
                 if start <= ti <= end:
-                    attrs = {"id": tok.id}
-                    for k, v in tok.features.items():
-                        if k == "form":
-                            continue
-                        attrs[k] = str(v)
+                    attrs = _w_attrs(tok)
                     w_el = etree.SubElement(s_el, "w", **attrs)
                     w_el.text = str(tok.features.get("form", ""))
     else:
         s_el = etree.SubElement(p_el, "s", id="s1")
         for tok in tokens:
-            attrs = {"id": tok.id}
-            for k, v in tok.features.items():
-                if k == "form":
-                    continue
-                attrs[k] = str(v)
+            attrs = _w_attrs(tok)
             w_el = etree.SubElement(s_el, "w", **attrs)
             w_el.text = str(tok.features.get("form", ""))
 

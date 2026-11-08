@@ -35,7 +35,7 @@ Flexiconv’s TEITOK support lives mainly in `flexiconv/io/teitok_xml.py`.
 ## Conversion semantics
 
 - **Reading (`teitok` input)**:
-  - Tokens: `<tok>` / `<dtok>` become nodes in the `tokens` layer; attributes (`lemma`, `upos`, `xpos`, `feats`, `head`, `deprel`, etc.) become token features.
+  - Tokens: a `<tok>`, or each `<dtok>` of a `<tok>`, is a node in the `tokens` layer (the syntactic words); attributes (`lemma`, `upos`, `xpos`, `feats`, `head`, `deprel`, `misc_*`, `@misc`, etc.) become token features. A `<tok>` with `<dtok>`s is also a node of the `mwt` layer (its text, spacing and own attributes); text output (txt, html) shows that surface form. A `<notok>` with a decimal `@ord` or `@deps` is a UD empty node (`empty` layer). `<s>` attributes become sentence features; `<doc>` / `<p>` mark `newdoc` / `newpar`. See [CoNLL-U](Format-conllu.md) for the full mapping.
   - Sentences: `<s>` elements become nodes in the `sentences` layer; milestone-style `<s/>` with `sameAs` are expanded to explicit sentence spans.
   - Structure: `<div>`, `<p>`, `<u>`, `<name>`, `<seg>`, etc. create `structure` and span layers.
   - TEI header is preserved and mapped into document metadata when relevant.

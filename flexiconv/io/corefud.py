@@ -100,7 +100,7 @@ def apply_corefud(doc, *, doc_id: str, global_entity: Optional[str] = None) -> i
             continue
         by_index[idx] = node
         v = node.features.get("misc_Entity")
-        if v:
+        if v and isinstance(v, str):  # a bare `Entity` (True) holds no mention
             values.append((idx, v))
     if not values:
         return 0

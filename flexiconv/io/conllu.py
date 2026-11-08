@@ -27,8 +27,23 @@ class _ConlluToken:
     extras: Dict[str, str] = field(default_factory=dict)
 
 
-def _parse_misc(raw: str) -> Dict[str, str]:
-    misc: Dict[str, str] = {}
+# Sentence feature (and TEITOK <s> attribute) for comment lines that are no `key = value`
+FREE_COMMENTS = "conllu_comments"
+
+# Comments that describe the file, not a sentence
+_CONLLU_FILE_KEYS = frozenset({"generator", "model", "udpipe_model", "udpipe_model_licence"})
+
+
+def _is_file_comment(content: str) -> bool:
+    """A comment about the whole file (global.columns, global.Entity, generator, language, ...)."""
+    key, has_eq, _ = content.partition("=")
+    key = key.strip()
+    return bool(has_eq) and (key in _CONLLU_FILE_KEYS or key == "language" or key.startswith("global."))
+
+
+def _parse_misc(raw: str) -> Dict[str, Any]:
+    """MISC items: ``K=V`` → ``"V"`` (``K=`` → ``""``), a bare ``K`` → ``True``."""
+    misc: Dict[str, Any] = {}
     if not raw or raw == "_":
         return misc
     for part in raw.split("|"):
@@ -38,17 +53,17 @@ def _parse_misc(raw: str) -> Dict[str, str]:
             k, v = part.split("=", 1)
             misc[k] = v
         else:
-            misc[part] = "Yes"
+            misc[part] = True  # a bare item: written back bare
     return misc
 
 
-def _format_misc(misc: Dict[str, str]) -> str:
+def _format_misc(misc: Dict[str, Any]) -> str:
     if not misc:
         return "_"
     parts: List[str] = []
     for k in sorted(misc.keys()):
         v = misc[k]
-        if v == "Yes" or v == "":
+        if v is True:
             parts.append(k)
         else:
             parts.append(f"{k}={v}")
@@ -57,7 +72,7 @@ def _format_misc(misc: Dict[str, str]) -> str:
 
 def _remap_conllu_head_to_tokid(
     head: str,
-    local_to_tid: Dict[int, str],
+    local_to_tid: Dict[Any, str],
 ) -> Optional[str]:
     """Map a CoNLL-U HEAD value to a TEITOK token id.
 
@@ -69,6 +84,8 @@ def _remap_conllu_head_to_tokid(
         return None
     if h.isdigit():
         return local_to_tid.get(int(h))
+    if "." in h and h.replace(".", "", 1).isdigit():
+        return local_to_tid.get(h, h)  # an empty node
     return h
 
 
@@ -110,7 +127,7 @@ def _remap_tokid_head_to_conllu(
         return "0"
     if h in tid_to_local:
         return str(tid_to_local[h])
-    if h.isdigit():
+    if h.isdigit() or (h.count(".") == 1 and h.replace(".", "").isdigit()):
         return h
     return "_"
 
@@ -192,9 +209,19 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
       ``ord`` / ``ohead`` for validation (TEITOK convention; omit with
       ``--option ord=no``).
 
-    Multi-word token range lines (e.g. '3-4 don't') are ignored; only the surface tokens
-    with integer IDs are loaded. SpaceAfter=No in MISC is mapped to a boolean feature
-    'space_after' on the token nodes.
+    Multi-word token range lines (e.g. ``3-4 don't``) become nodes of an ``mwt`` layer
+    anchored to their words (feature ``form``, ``space_after``, ``misc_*``); in TEITOK they are
+    ``<tok id="w-N">don't<dtok id="d-N-1" .../><dtok id="d-N-2" .../></tok>`` (the words get
+    ``d-N-k`` ids, other tokens ``w-N``, N counting surface tokens). SpaceAfter=No in MISC is
+    mapped to a boolean feature 'space_after'.
+
+    Comments: free-text comment lines go to the sentence feature ``conllu_comments`` (one per line);
+    ``key = value`` lines are sentence features (``sent_id``, ``text``, ``translit``,
+    ...), except file-level ones (``generator``, ``model``, ``global.*``, ``meta::*``).
+    ``# newdoc [id = X]`` / ``# newpar [id = X]`` set ``_newdoc`` / ``_newpar`` (the id, or "")
+    on the next sentence. Empty nodes (``5.1``) become nodes of an ``empty`` layer, anchored to the
+    word they follow (``_before`` when they come first, ``0.1``), with ``ord`` = the decimal id and
+    ids ``e-N-k``; DEPS references to them use those ids. In TEITOK they are ``<notok>``.
     """
     with open(path, "r", encoding="utf-8") as f:
         lines = f.read().splitlines()
@@ -206,6 +233,11 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
     sentences_meta: List[Dict[str, Any]] = []
     current_sent_meta: Dict[str, Any] = {}
     tokens: List[_ConlluToken] = []
+    # multi-word tokens: (sent_idx, first local id, last local id, form, misc, feats)
+    mwts: List[Tuple[int, int, int, str, Dict[str, str], str]] = []
+    # empty nodes: (sent_idx, decimal id, the 10 columns)
+    empties: List[Tuple[int, str, List[str]]] = []
+    first_newdoc_id: Optional[str] = None
 
     sent_idx = 0
     local_id = 0
@@ -220,7 +252,8 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
     def _flush_sentence() -> None:
         nonlocal sent_idx, local_id, current_sent_meta
         if local_id == 0:
-            current_sent_meta = {}
+            # no words: keep newdoc/newpar for the next sentence
+            current_sent_meta = {k: v for k, v in current_sent_meta.items() if k in ("_newdoc", "_newpar")}
             return
         sentences_meta.append(current_sent_meta)
         sent_idx += 1
@@ -251,20 +284,29 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
                     extra_col_names = []
                 continue
             # language and file-level generator/model etc.
-            if content.startswith("language") and "=" in content:
+            if content.split("=", 1)[0].strip() == "language" and "=" in content:
                 _, val = content.split("=", 1)
                 language = (val or "").strip()
                 continue
-            if "=" in content:
-                key, val = content.split("=", 1)
-                key = key.strip()
-                val = val.strip()
-                if key in {"sent_id", "text"}:
-                    current_sent_meta[key] = val
-                else:
-                    # Treat everything else as file-level metadata for now
-                    file_level_attrs.setdefault(key, val)
-            # Ignore other comments (newdoc/newpar markers are not structurally modelled yet)
+            key, has_eq, val = content.partition("=")
+            key = key.strip()
+            val = val.strip()
+            marker = key.split()[0] if key else ""
+            if marker in ("newdoc", "newpar") and (key == marker or key == marker + " id"):
+                current_sent_meta["_" + marker] = val if has_eq else ""
+                if marker == "newdoc" and has_eq and first_newdoc_id is None:
+                    first_newdoc_id = val
+                continue
+            if not has_eq or not key or " " in key:
+                # free-text comment: kept, one per line, in the sentence feature FREE_COMMENTS
+                if content:
+                    prev = current_sent_meta.get(FREE_COMMENTS)
+                    current_sent_meta[FREE_COMMENTS] = f"{prev}\n{content}" if prev else content
+                continue
+            if key in _CONLLU_FILE_KEYS or key.startswith(("global.", "meta::")):
+                file_level_attrs.setdefault(key, val)
+            else:
+                current_sent_meta[key] = val
             continue
 
         cols = line.split("\t")
@@ -274,8 +316,16 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
                 # Malformed line; skip
                 continue
             tid = cols[0]
-            # Skip multi-word token lines (e.g. 3-4)
-            if "-" in tid or "." in tid:
+            # Multi-word token (3-4): kept for the mwt layer. Empty node (5.1): skipped.
+            if "-" in tid:
+                a, _, b = tid.partition("-")
+                if a.isdigit() and b.isdigit() and int(b) >= int(a):
+                    mwts.append((sent_idx, int(a), int(b), cols[1], _parse_misc(cols[9]), cols[5]))
+                continue
+            if "." in tid:
+                a, _, b = tid.partition(".")
+                if a.isdigit() and b.isdigit():
+                    empties.append((sent_idx, tid, cols[:10]))
                 continue
             try:
                 local_int = int(tid)
@@ -375,8 +425,15 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
     sent_token_ranges: List[Tuple[int, int]] = []
     current_sent = 0
     sent_start_idx = 0
-    sent_local_to_tid: Dict[int, Dict[int, str]] = {}
+    sent_local_to_tid: Dict[int, Dict[Any, str]] = {}  # int word ids, "5.1" empty node ids
     pending_heads: List[Tuple[str, int, str, str]] = []  # node_id, sent_idx, raw_head, raw_deps
+    # (sent_idx, first local id) -> (last local id, form, misc) of a multi-word token
+    mwt_at: Dict[Tuple[int, int], Tuple[int, str, Dict[str, str], str]] = {
+        (si, a): (b, form, misc, feats) for si, a, b, form, misc, feats in mwts
+    }
+    surface_idx = 0  # TEITOK <tok> count: the N of w-N / d-N-k
+    open_mwt: Optional[Dict[str, Any]] = None  # the multi-word token being filled
+    mwt_layer: Optional[Layer] = doc.get_or_create_layer("mwt") if mwts else None
 
     for tok in tokens:
         # Start of a new sentence?
@@ -387,13 +444,43 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
             sent_start_idx = token_idx
 
         token_idx += 1
+        if open_mwt is not None and (open_mwt["sent"] != tok.sent_idx or tok.local_id > open_mwt["last"]):
+            open_mwt = None
+        span = mwt_at.get((tok.sent_idx, tok.local_id))
+        if open_mwt is None and span is not None:
+            surface_idx += 1
+            last, mform, mmisc, mfeats = span
+            open_mwt = {"sent": tok.sent_idx, "last": last, "n": surface_idx, "k": 0}
+            mfeat: Dict[str, Any] = {
+                "form": mform if mform != "_" else "",
+                "space_after": mmisc.get("SpaceAfter") != "No",
+            }
+            if mfeats and mfeats != "_":
+                mfeat["feats"] = mfeats  # FEATS on a range line (UD: Typo=Yes)
+            for k, v in mmisc.items():
+                if k not in {"SpaceAfter", "tokId"}:
+                    mfeat[f"misc_{k}"] = v
+            assert mwt_layer is not None
+            mwt_layer.nodes[f"w-{surface_idx}"] = Node(
+                id=f"w-{surface_idx}",
+                type="mwt",
+                anchors=[Anchor(type=AnchorType.TOKEN, token_start=token_idx, token_end=token_idx)],
+                features=mfeat,
+            )
         tok_id_misc = tok.misc.get("tokId")
-        node_id = tok_id_misc if tok_id_misc else f"w-{token_idx}"
+        if open_mwt is not None:
+            open_mwt["k"] += 1
+            node_id = f"d-{open_mwt['n']}-{open_mwt['k']}"
+            mwt_layer.nodes[f"w-{open_mwt['n']}"].anchors[0].token_end = token_idx
+        else:
+            surface_idx += 1
+            node_id = tok_id_misc if tok_id_misc else f"w-{surface_idx}"
         sent_local_to_tid.setdefault(tok.sent_idx, {})[tok.local_id] = node_id
         anchor = Anchor(type=AnchorType.TOKEN, token_start=token_idx, token_end=token_idx)
         features: Dict[str, Any] = {
             "form": tok.form,
             "ord": str(tok.local_id),
+            "_sent": tok.sent_idx,
         }
         if tok.head:
             features["ohead"] = tok.head
@@ -434,9 +521,44 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
     if token_idx > sent_start_idx:
         sent_token_ranges.append((sent_start_idx + 1, token_idx))
 
+    # Empty nodes: anchored to the word they follow; ids e-N-k (N = that word's <tok>).
+    if empties:
+        empty_layer = doc.get_or_create_layer("empty")
+        word_node: Dict[Tuple[int, int], Node] = {}
+        for n in tokens_layer.nodes.values():
+            word_node[(int(n.features.get("_sent", -1)), int(n.features["ord"]))] = n
+        k_after: Dict[str, int] = {}
+        for si, dec, cols in empties:
+            after = int(dec.split(".")[0])
+            before = after == 0
+            ref = word_node.get((si, after if not before else 1))
+            if ref is None:
+                continue
+            tidx = ref.anchors[0].token_start
+            surf = ref.id.split("-")[1] if ref.id.count("-") >= 1 else str(tidx)
+            k_after[f"{si}:{surf}"] = k_after.get(f"{si}:{surf}", 0) + 1
+            eid = f"e-{surf}-{k_after[f'{si}:{surf}']}" if not before else f"e-0-{dec.split('.')[1]}-{si}"
+            efeat: Dict[str, Any] = {"ord": dec}
+            for key, val in zip(("form", "lemma", "upos", "xpos", "feats"), cols[1:6]):
+                if val and val != "_":
+                    efeat[key] = val
+            if before:
+                efeat["_before"] = True
+            for mk, mv in _parse_misc(cols[9]).items():
+                efeat[f"misc_{mk}"] = mv
+            empty_layer.nodes[eid] = Node(
+                id=eid, type="empty",
+                anchors=[Anchor(type=AnchorType.TOKEN, token_start=tidx, token_end=tidx)],
+                features=efeat,
+            )
+            sent_local_to_tid.setdefault(si, {})[dec] = eid
+            if cols[8] and cols[8] != "_":
+                pending_heads.append((eid, si, "", cols[8]))
+
     # Remap CoNLL-U ordinal HEAD/DEPS to TEITOK token ids.
+    empty_nodes = doc.layers["empty"].nodes if "empty" in doc.layers else {}
     for node_id, sent_idx, raw_head, raw_deps in pending_heads:
-        node = tokens_layer.nodes.get(node_id)
+        node = tokens_layer.nodes.get(node_id) or empty_nodes.get(node_id)
         if node is None:
             continue
         local_map = sent_local_to_tid.get(sent_idx, {})
@@ -447,11 +569,14 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
         if mapped_deps:
             node.features["deps"] = mapped_deps
 
+    for n in tokens_layer.nodes.values():
+        n.features.pop("_sent", None)
+
     # CorefUD coreference (MISC Entity=): `coref` on the mention heads (corefud.py)
     if any("misc_Entity" in n.features for n in tokens_layer.nodes.values()):
         from .corefud import apply_corefud
 
-        cu_doc = file_level_attrs.get("newdoc id") or doc_id or os.path.splitext(os.path.basename(path))[0]
+        cu_doc = first_newdoc_id or doc_id or os.path.splitext(os.path.basename(path))[0]
         apply_corefud(doc, doc_id=cu_doc, global_entity=file_level_attrs.get("global.Entity"))
 
     # Create sentence nodes
@@ -478,6 +603,9 @@ def load_conllu(path: str, *, doc_id: Optional[str] = None) -> Document:
         )
         sentences_layer.nodes[node.id] = node
 
+    if sentences_meta and any(k != "_newpar" for m in sentences_meta for k in m):
+        # sentence comments are content: TEITOK writes them as <s> attributes
+        doc.meta["_sentence_features_as_attrs"] = True
     return doc
 
 
@@ -524,6 +652,25 @@ def save_conllu(
         key=lambda n: (n.anchors[0].token_start or 0),
     )
 
+    # Multi-word tokens by first word index; empty nodes by the word index they follow
+    mwt_by_start: Dict[int, Node] = {}
+    if document.layers.get("mwt"):
+        for m in document.layers["mwt"].nodes.values():
+            mwt_by_start[m.anchors[0].token_start or 0] = m
+    empties_at: Dict[int, List[Node]] = {}
+    if document.layers.get("empty"):
+        for e in document.layers["empty"].nodes.values():
+            empties_at.setdefault(e.anchors[0].token_start or 0, []).append(e)
+
+    def _misc_of(f: Dict[str, Any], with_space: bool = True) -> str:
+        misc: Dict[str, Any] = {}
+        if with_space and f.get("space_after") is False:
+            misc["SpaceAfter"] = "No"
+        for key, value in f.items():
+            if key.startswith("misc_"):
+                misc[key[len("misc_"):]] = value if value is True else str(value)
+        return _format_misc(misc)
+
     lines: List[str] = []
 
     # File-level metadata: previously parsed attributes plus generator/model/language
@@ -540,8 +687,13 @@ def save_conllu(
     if language:
         file_attrs.setdefault("language", str(language))
 
+    # Document comments (global.*, meta::*) follow the first `# newdoc`, when there is one
+    first_newdoc = bool(sent_nodes) and "_newdoc" in sent_nodes[0].features
+    doc_lines = [
+        f"# {k} = {file_attrs[k]}" for k in file_attrs if first_newdoc and k.startswith(("global.", "meta::"))
+    ]
     for key in sorted(file_attrs.keys()):
-        if key == "language":
+        if key == "language" or (first_newdoc and key.startswith(("global.", "meta::"))):
             # Language is output last
             continue
         lines.append(f"# {key} = {file_attrs[key]}")
@@ -556,9 +708,17 @@ def save_conllu(
         else:
             start = 0
             end = 0
-        if lines:
-            lines.append("")  # blank line before each sentence (after header)
+        if si > 0:
+            lines.append("")  # blank line between sentences (the file comments lead into the first)
 
+        if "_newdoc" in s.features:
+            nd = s.features["_newdoc"]
+            lines.append(f"# newdoc id = {nd}" if nd else "# newdoc")
+            if si == 0:
+                lines.extend(doc_lines)
+        if "_newpar" in s.features:
+            np_ = s.features["_newpar"]
+            lines.append(f"# newpar id = {np_}" if np_ else "# newpar")
         sent_id_val = s.features.get("sent_id") or s.id
         text_val = s.features.get("text")
         if sent_id_val:
@@ -568,9 +728,12 @@ def save_conllu(
 
         # Output all other sentence-level features as comments
         for key, value in sorted(s.features.items()):
-            if key in {"sent_id", "text"}:
+            if key in {"sent_id", "text", FREE_COMMENTS} or key.startswith("_"):
                 continue
             lines.append(f"# {key} = {value}")
+        for free in str(s.features.get(FREE_COMMENTS) or "").split("\n"):
+            if free:
+                lines.append(f"# {free}")
 
         # Collect tokens for this sentence, in order
         sent_tokens: List[Tuple[int, Node]] = []
@@ -580,12 +743,54 @@ def save_conllu(
                 sent_tokens.append((tidx, tok))
 
         # TEITOK-style head/deps use token ids; CoNLL-U needs sentence-local ordinals.
-        tid_to_local: Dict[str, int] = {
+        tid_to_local: Dict[str, Any] = {
             tok_node.id: local_i for local_i, (_, tok_node) in enumerate(sent_tokens, start=1)
         }
+        # a head on a multi-word token's id means its first word
+        for tidx, tok_node in sent_tokens:
+            m = mwt_by_start.get(tidx)
+            if m is not None:
+                tid_to_local.setdefault(m.id, tid_to_local[tok_node.id])
+        # empty nodes: their decimal id (ord), or <word>.<k>
+        sent_empties: Dict[str, List[Tuple[str, Node]]] = {}  # word id (or "0") -> its empty nodes
+        for local_i, (tidx, tok_node) in enumerate(sent_tokens, start=1):
+            nodes = sorted(empties_at.get(tidx, []), key=lambda e: str(e.features.get("ord", "")))
+            for k, e in enumerate(nodes, start=1):
+                dec = str(e.features.get("ord") or "")
+                if not (dec.count(".") == 1 and dec.replace(".", "").isdigit()):
+                    word = str(tok_node.features.get("ord") or local_i)
+                    dec = f"{0 if e.features.get('_before') else word}.{k}"
+                tid_to_local[e.id] = dec
+                # after the word its decimal id names (inside a multi-word token too)
+                sent_empties.setdefault(dec.split(".")[0], []).append((dec, e))
+        mwt_last = 0  # word index the open multi-word token ends at
 
-        for tok_idx_in_sent, (_, tok_node) in enumerate(sent_tokens, start=1):
+        def _empty_lines(dec_nodes: List[Tuple[str, Node]]) -> None:
+            for dec, e in dec_nodes:
+                ef = e.features
+                edeps = str(ef.get("deps") or "")
+                lines.append("\t".join([
+                    dec, str(ef.get("form") or "_"), str(ef.get("lemma") or "_"), str(ef.get("upos") or "_"),
+                    str(ef.get("xpos") or "_"), str(ef.get("feats") or "_"), "_", "_",
+                    _remap_tokid_deps_to_conllu(edeps, tid_to_local) if edeps else "_",
+                    _misc_of(ef, with_space=False),
+                ]))
+
+        _empty_lines(sent_empties.get("0", []))
+        for tok_idx_in_sent, (tidx, tok_node) in enumerate(sent_tokens, start=1):
             f = tok_node.features
+            m = mwt_by_start.get(tidx)
+            if m is not None:
+                m_end = m.anchors[0].token_end or tidx
+                last_local = tok_idx_in_sent + sum(1 for t, _ in sent_tokens if tidx < t <= m_end)
+                first_id = str(f.get("ord") or tok_idx_in_sent)
+                last_node = next((n for t, n in sent_tokens if t == m_end), None)
+                last_id = str((last_node.features.get("ord") if last_node else None) or last_local)
+                lines.append("\t".join([
+                    f"{first_id}-{last_id}", str(m.features.get("form") or "_"),
+                    "_", "_", "_", str(m.features.get("feats") or "_"), "_", "_", "_", _misc_of(m.features),
+                ]))
+                mwt_last = m_end
             form = str(f.get("form", "") or "_")
             lemma = str(f.get("lemma") or "_")
             upos = str(f.get("upos") or "_")
@@ -604,18 +809,8 @@ def save_conllu(
             raw_deps = str(f.get("deps") or "")
             deps = _remap_tokid_deps_to_conllu(raw_deps, tid_to_local) if raw_deps else "_"
             col_id = str(f.get("ord") or tok_idx_in_sent)
-            # Reconstruct MISC
-            misc: Dict[str, str] = {}
-            # Map space_after boolean back to SpaceAfter=No
-            space_after = f.get("space_after")
-            if space_after is False:
-                misc["SpaceAfter"] = "No"
-            # Any misc_* feature becomes a MISC key
-            for key, value in f.items():
-                if key.startswith("misc_"):
-                    k = key[len("misc_") :]
-                    misc[str(k)] = str(value)
-            misc_str = _format_misc(misc)
+            # MISC; inside a multi-word token, SpaceAfter belongs to the range line
+            misc_str = _misc_of(f, with_space=tidx > mwt_last)
             cols = [
                 col_id,
                 form,
@@ -629,6 +824,7 @@ def save_conllu(
                 misc_str,
             ]
             lines.append("\t".join(cols))
+            _empty_lines(sent_empties.get(col_id, []))
 
     # Ensure exactly one trailing blank line
     if not lines or lines[-1] != "":
@@ -1026,22 +1222,12 @@ def chunk_conllu_to_teitok_files(
                         _flush_sentence_into_chunk(byte_pos)
                     hard_before = True
                 if not seen_token and current_tokens == 0 and not current_lines:
-                    content = line[1:].strip()
-                    key = content.split("=", 1)[0].strip().lower().replace(" ", "_")
-                    if key in {
-                        "sent_id",
-                        "text",
-                        "newdoc",
-                        "newdoc_id",
-                        "newtext",
-                        "newtext_id",
-                        "text_id",
-                        "newpar",
-                        "newpar_id",
-                    } or content.startswith("newdoc") or content.startswith("newtext"):
-                        current_lines.append(line)
-                    else:
+                    # Leading comments: file comments go into every chunk's header; anything else
+                    # (author, doc_title, newdoc, sent_id, ...) belongs to the first sentence.
+                    if _is_file_comment(line[1:].strip()):
                         global_header.append(line)
+                    else:
+                        current_lines.append(line)
                     continue
                 current_lines.append(line)
                 continue

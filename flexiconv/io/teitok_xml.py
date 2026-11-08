@@ -266,6 +266,55 @@ def _ensure_tei_header(tei: etree._Element, source_filename: Optional[str], when
     change.text = f"Converted from {source_filename} by flexiconv" if source_filename else "Converted by flexiconv"
 
 
+_XML_NAME_CACHE: dict[str, bool] = {}
+
+
+def _xml_attr_name_ok(name: str) -> bool:
+    """Whether `name` can be an (unprefixed) XML attribute name; lxml decides."""
+    ok = _XML_NAME_CACHE.get(name)
+    if ok is None:
+        try:
+            etree.Element("t").set(name, "")
+            ok = ":" not in name
+        except ValueError:
+            ok = False
+        _XML_NAME_CACHE[name] = ok
+    return ok
+
+
+def _xml_attr_name_safe(name: str) -> str:
+    """`name` with every character an XML name cannot have replaced by `_`."""
+    out = "".join(c if _xml_attr_name_ok("a" + c) else "_" for c in name)
+    if not _xml_attr_name_ok(out):
+        out = "_" + out
+    return out
+
+
+_SPACE_STOP = frozenset({"s", "p", "doc", "body", "text", "div", "u", "lb", "head", "item", "TEI"})
+
+
+def _space_after(t: etree._Element) -> bool:
+    """Whether a space follows token `t`: its tail, or, when `t` ends an inline element (e.g. a
+    <mention>), that element's tail. Any space character in that text means a space."""
+    el = t
+    while True:
+        if el.tail:
+            return " " in el.tail
+        if el.getnext() is not None:
+            return False
+        parent = el.getparent()
+        if parent is None or not isinstance(parent.tag, str) or etree.QName(parent).localname in _SPACE_STOP:
+            return False
+        el = parent
+
+
+# <tok> / <dtok> / <notok> attributes read as word features (MISC: misc_* and @misc)
+_TEITOK_WORD_ATTRS = (
+    "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "ord", "ohead", "reg", "expan", "corr",
+    "trslit", "lex", "nform", "ort", "gram", "opos", "olemma",
+)
+
+
 def load_teitok(path: str, *, doc_id: Optional[str] = None) -> Document:
     """Load a TEITOK-style TEI XML file into a pivot Document.
 
@@ -290,87 +339,153 @@ def load_teitok(path: str, *, doc_id: Optional[str] = None) -> Document:
         titles = headers[0].xpath(".//*[local-name()='titleStmt']/*[local-name()='title']")
         if titles and (titles[0].text or "").strip():
             doc.meta["title"] = (titles[0].text or "").strip()
+        conllu_notes = {
+            n.get("n")[len("conllu:"):]: (n.text or "")
+            for n in headers[0].xpath(".//*[local-name()='note'][starts-with(@n, 'conllu:')]")
+        }
+        if conllu_notes:
+            doc.meta["_conllu_file_attrs"] = conllu_notes
 
     tokens_layer = doc.get_or_create_layer("tokens")
     sentences_layer = doc.get_or_create_layer("sentences")
 
-    # Collect tokens in document order (under text, or anywhere)
-    token_elems = _xpath_local(root, "tok")
-    token_index_by_xmlid: dict[str, int] = {}
-    for idx, t in enumerate(token_elems, start=1):
-        xmlid = t.get("id") or t.get("{http://www.w3.org/XML/1998/namespace}id") or f"w-{idx}"
-        token_index_by_xmlid[xmlid] = idx
+    # Words in document order: <tok>, or the <dtok>s of a <tok> (a multi-word token: mwt layer);
+    # <notok> (an empty node: empty layer, anchored to the word it follows).
+    def _xid(el: etree._Element) -> Optional[str]:
+        return el.get("id") or el.get("{http://www.w3.org/XML/1998/namespace}id")
 
-        form = (t.text or "").strip()
-        features = {
-            "form": form,
-        }
-        for attr in ("lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "ord", "ohead", "reg", "expan", "corr", "trslit", "lex", "nform", "ort", "gram", "opos", "olemma"):
-            val = t.get(attr)
+    def _word_features(el: etree._Element, form: str) -> dict[str, Any]:
+        features: dict[str, Any] = {"form": form}
+        for attr in _TEITOK_WORD_ATTRS:
+            val = el.get(attr)
             if val is not None:
                 features[attr] = val
-        # Derive space_after from tok.tail: any space character in the tail means a
-        # space follows this token; otherwise there is no space. We record this as a
-        # boolean so downstream formats (e.g. CoNLL-U MISC SpaceAfter=No) can use it.
-        has_space_after = bool(t.tail and " " in t.tail)
-        features[SPACE_AFTER_FEATURE] = has_space_after
+        # MISC: one attribute per item (misc_KEY), plus @misc with items kept verbatim
+        # (keys that are no XML name, e.g. `LMSeg:a-b`).
+        for attr, val in el.attrib.items():
+            if isinstance(attr, str) and attr.startswith("misc_"):
+                features[attr] = val if val != "" else True  # misc_KEY="" is a bare item
+        for part in (el.get("misc") or "").split("|"):
+            if part and part != "_":
+                k, eq, v = part.partition("=")
+                features.setdefault(f"misc_{k}", v if eq else True)
+        return features
 
-        anchor = Anchor(type=AnchorType.TOKEN, token_start=idx, token_end=idx)
-        node = Node(id=xmlid, type="token", anchors=[anchor], features=features)
-        tokens_layer.nodes[node.id] = node
+    def _ancestor(el: etree._Element, name: str) -> Optional[etree._Element]:
+        found = el.xpath(f"ancestor::*[local-name()='{name}'][1]")
+        return found[0] if found else None
 
-    # Sentences: map <s> elements to token ranges (child <tok> or sameAs="#w-1 #w-2 ...")
+    token_index_by_xmlid: dict[str, int] = {}
+    tok_range: dict[str, tuple[int, int]] = {}  # <tok> id -> its first and last word
+    surface: dict[str, tuple[str, bool]] = {}  # <tok> id -> (text, space after)
+    idx = 0
+    last_word_s: Optional[etree._Element] = None
+    pending_before: list[Node] = []
+    n_empty = 0
+    for t in root.xpath(".//*[local-name()='tok' or local-name()='notok']"):
+        local = etree.QName(t).localname
+        s_anc = _ancestor(t, "s")
+        if local == "notok":
+            # a UD empty node (decimal @ord or @deps); other <notok>s (e.g. PROIEL's) are no words of UD
+            ord_ = t.get("ord") or ""
+            if not (t.get("deps") or (ord_.count(".") == 1 and ord_.replace(".", "").isdigit())):
+                continue
+            n_empty += 1
+            efeat = _word_features(t, t.get("form") or (t.text or "").strip())
+            if not efeat["form"]:
+                del efeat["form"]
+            eid = _xid(t) or f"e-{n_empty}"
+            enode = Node(id=eid, type="empty", anchors=[Anchor(type=AnchorType.TOKEN, token_start=idx, token_end=idx)],
+                         features=efeat)
+            doc.get_or_create_layer("empty").nodes[eid] = enode
+            if idx == 0 or last_word_s is not s_anc:
+                efeat["_before"] = True
+                pending_before.append(enode)
+            continue
+        tid = _xid(t) or f"w-{idx + 1}"
+        form = (t.text or "").strip()
+        has_space_after = _space_after(t)
+        dtoks = [d for d in t if isinstance(d.tag, str) and etree.QName(d).localname == "dtok"]
+        first = idx + 1
+        if dtoks:
+            for k, d in enumerate(dtoks, start=1):
+                idx += 1
+                did = _xid(d) or f"{tid}-{k}"
+                dfeat = _word_features(d, d.get("form") or "")
+                dfeat[SPACE_AFTER_FEATURE] = True
+                anchor = Anchor(type=AnchorType.TOKEN, token_start=idx, token_end=idx)
+                tokens_layer.nodes[did] = Node(id=did, type="token", anchors=[anchor], features=dfeat)
+                token_index_by_xmlid[did] = idx
+            mfeat = _word_features(t, form)
+            mfeat[SPACE_AFTER_FEATURE] = has_space_after
+            doc.get_or_create_layer("mwt").nodes[tid] = Node(
+                id=tid, type="mwt", anchors=[Anchor(type=AnchorType.TOKEN, token_start=first, token_end=idx)],
+                features=mfeat,
+            )
+        else:
+            idx += 1
+            features = _word_features(t, form)
+            features[SPACE_AFTER_FEATURE] = has_space_after
+            anchor = Anchor(type=AnchorType.TOKEN, token_start=idx, token_end=idx)
+            tokens_layer.nodes[tid] = Node(id=tid, type="token", anchors=[anchor], features=features)
+        token_index_by_xmlid[tid] = first
+        tok_range[tid] = (first, idx)
+        surface[tid] = (form, has_space_after)
+        for e in pending_before:
+            e.anchors[0].token_start = e.anchors[0].token_end = first
+        pending_before = []
+        last_word_s = s_anc
+
+    # Sentences: map <s> elements to token ranges (child <tok> or sameAs="#w-1 #w-2 ...");
+    # <s> attributes become sentence features; a new <doc> / <p> sets _newdoc / _newpar.
     sent_elems = _xpath_local(root, "s")
+    extra_s_attrs = False
+    prev_doc: Optional[etree._Element] = None
+    prev_p: Optional[etree._Element] = None
+    has_doc = bool(_xpath_local(root, "doc"))
     for s_idx, s in enumerate(sent_elems, start=1):
-        sid = s.get("id") or s.get("{http://www.w3.org/XML/1998/namespace}id") or f"s-{s_idx}"
+        sid = _xid(s) or f"s-{s_idx}"
         toks_in_s = s.xpath(".//*[local-name()='tok']")
-        id_sequence: list[str] = []
-        if not toks_in_s:
+        if toks_in_s:
+            id_sequence = [tid for tid in (_xid(t) for t in toks_in_s) if tid and tid in tok_range]
+        else:
             # TEITOK often uses sameAs on <s> to reference token IDs (s and tok are siblings)
             same_as = s.get("sameAs") or ""
-            ids_from_same_as = [ref.lstrip("#").strip() for ref in same_as.split() if ref.strip()]
-            indices = [token_index_by_xmlid[tid] for tid in ids_from_same_as if tid in token_index_by_xmlid]
-            if not indices:
-                continue
-            start = min(indices)
-            end = max(indices)
-            # Preserve actual spacing from token features instead of forcing spaces between all forms.
-            id_sequence = [tid for tid in ids_from_same_as if tid in tokens_layer.nodes]
-        else:
-            indices = []
-            for t in toks_in_s:
-                tid = t.get("id") or t.get("{http://www.w3.org/XML/1998/namespace}id")
-                if not tid:
-                    continue
-                idx = token_index_by_xmlid.get(tid)
-                if idx is not None:
-                    indices.append(idx)
-                    id_sequence.append(tid)
-            if not indices:
-                continue
-            start = min(indices)
-            end = max(indices)
-        # Reconstruct sentence text from token layer using space_after feature,
-        # so we respect TEITOK's no-space-before-punctuation behaviour.
+            id_sequence = [r.lstrip("#").strip() for r in same_as.split() if r.strip().lstrip("#") in tok_range]
+        if not id_sequence:
+            continue
+        start = min(tok_range[tid][0] for tid in id_sequence)
+        end = max(tok_range[tid][1] for tid in id_sequence)
+        # Reconstruct sentence text from the <tok> texts and their spacing.
         sent_text_parts: list[str] = []
         for tid in id_sequence:
-            tok_node = tokens_layer.nodes.get(tid)
-            if not tok_node:
+            form, space = surface[tid]
+            if form:
+                sent_text_parts.append(form)
+                if space:
+                    sent_text_parts.append(" ")
+        features: dict[str, Any] = {}
+        for attr, val in s.attrib.items():
+            if not isinstance(attr, str) or attr in ("id", "sameAs") or attr.startswith("{"):
                 continue
-            form = str(tok_node.features.get("form", ""))
-            if not form:
-                continue
-            sent_text_parts.append(form)
-            if tok_node.features.get(SPACE_AFTER_FEATURE):
-                sent_text_parts.append(" ")
-        sent_text = "".join(sent_text_parts).rstrip()
+            features[attr] = val
+            extra_s_attrs = True
+        features.setdefault("sent_id", sid)
+        features.setdefault("text", "".join(sent_text_parts).rstrip())
+        doc_el = _ancestor(s, "doc")
+        p_el = _ancestor(s, "p")
+        if has_doc and doc_el is not None and doc_el is not prev_doc:
+            features["_newdoc"] = doc_el.get("id") or ""
+        if p_el is not None and p_el is not prev_p:
+            par_id = p_el.get("org_id") or p_el.get("id") or ""
+            # a file's one plain <p> is no paragraph mark; in a <doc>, every <p> is
+            if par_id or prev_p is not None or has_doc:
+                features["_newpar"] = par_id
+        prev_doc, prev_p = doc_el, p_el
         anchor = Anchor(type=AnchorType.TOKEN, token_start=start, token_end=end)
-        features = {
-            "sent_id": sid,
-            "text": sent_text,
-        }
-        node = Node(id=sid, type="sentence", anchors=[anchor], features=features)
-        sentences_layer.nodes[node.id] = node
+        sentences_layer.nodes[sid] = Node(id=sid, type="sentence", anchors=[anchor], features=features)
+    if extra_s_attrs:
+        doc.meta["_sentence_features_as_attrs"] = True
 
     # Preserve full TEI tree so TEITOK-aware savers (teitok, hocr, doreco, etc.)
     # can reuse the original structure when needed.
@@ -627,6 +742,11 @@ def save_teitok(
         etree.SubElement(notes, "note", n="conversion").text = (
             "Converted from RTF by flexiconv; typesetting (bold, italic, fonts, etc.) was not preserved."
         )
+    # CoNLL-U file / document comments (global.*, meta::*, generator, ...): <note n="conllu:KEY">
+    file_attrs = document.meta.get("_conllu_file_attrs")
+    if isinstance(file_attrs, dict):
+        for k, v in file_attrs.items():
+            etree.SubElement(notes, "note", n=f"conllu:{k}").text = str(v)
     enc = etree.SubElement(header, "encodingDesc")
     app = etree.SubElement(enc, "appInfo")
     app_el = etree.SubElement(app, "application", ident="flexiconv", version="1.0", when=when)
@@ -669,23 +789,110 @@ def save_teitok(
             key=lambda n: (n.anchors[0].token_start or 0),
         )
 
-    def _add_tokens_to_p(p_el: etree._Element, tok_list: list[Node], sent_layer: Optional[Any]) -> None:
-        """Append <s><tok>...</tok></s> to p_el for the given token list."""
+    omit_ord = document.meta.get("_omit_conllu_ord")
+    sent_attrs = bool(document.meta.get("_sentence_features_as_attrs"))
+    # Multi-word tokens (mwt layer) by their first word; empty nodes (empty layer) by the word they follow
+    mwt_by_start: dict[int, Node] = {}
+    if document.layers.get("mwt"):
+        for m in document.layers["mwt"].nodes.values():
+            mwt_by_start[m.anchors[0].token_start or 0] = m
+    empty_after: dict[int, list[Node]] = {}
+    empty_before: dict[int, list[Node]] = {}
+    if document.layers.get("empty"):
+        for e in document.layers["empty"].nodes.values():
+            where = empty_before if e.features.get("_before") else empty_after
+            where.setdefault(e.anchors[0].token_start or 0, []).append(e)
+    for lst in list(empty_after.values()) + list(empty_before.values()):
+        lst.sort(key=lambda e: [int(x) for x in str(e.features.get("ord", "0.0")).split(".") if x.isdigit()])
+
+    def _node_attrs(node: Node, *, with_form: bool = False) -> dict[str, str]:
+        """A token-like node's features as XML attributes (MISC items that are no XML name in @misc)."""
+        attrs = {"id": node.id}
+        raw_misc: list[str] = []
+        for k, v in node.features.items():
+            if k.startswith("_") or k in (SPACE_AFTER_FEATURE, "spaceAfter"):
+                continue
+            if k == "form" and not with_form:
+                continue
+            if omit_ord and k in ("ord", "ohead"):
+                continue
+            if k.startswith("misc_"):
+                # MISC: misc_KEY="value", a bare item misc_KEY=""; kept verbatim in @misc when KEY
+                # is no XML name (e.g. `LMSeg:a-b`) or the value is empty (`Gloss=`)
+                item = k[len("misc_"):]
+                if v is True and _xml_attr_name_ok(k):
+                    attrs[k] = ""
+                elif v is not True and str(v) != "" and _xml_attr_name_ok(k):
+                    attrs[k] = str(v)
+                else:
+                    raw_misc.append(item if v is True else f"{item}={v}")
+            elif _xml_attr_name_ok(k):
+                attrs[k] = str(v)
+            else:
+                attrs[_xml_attr_name_safe(k)] = str(v)
+        if raw_misc:
+            prev = attrs.get("misc")
+            attrs["misc"] = "|".join(([prev] if prev else []) + raw_misc)
+        return attrs
+
+    def _tail(node: Node) -> str:
+        return " " if (node.features.get(SPACE_AFTER_FEATURE) or node.features.get("spaceAfter")) else ""
+
+    def _emit_empties(s_el: etree._Element, nodes: list[Node]) -> None:
+        """Empty nodes: <notok/>, a zero-width element between the words (form as attribute)."""
+        for e in nodes:
+            etree.SubElement(s_el, "notok", **_node_attrs(e, with_form=True))
+
+    def _emit_sentence_tokens(s_el: etree._Element, words: list[Node]) -> None:
+        i = 0
+        while i < len(words):
+            w = words[i]
+            ts = w.anchors[0].token_start or 0
+            _emit_empties(s_el, empty_before.get(ts, []))
+            m = mwt_by_start.get(ts)
+            if m is not None:
+                last = m.anchors[0].token_end or ts
+                parts = []
+                while i < len(words) and (words[i].anchors[0].token_start or 0) <= last:
+                    parts.append(words[i])
+                    i += 1
+                t_el = etree.SubElement(s_el, "tok", **_node_attrs(m))
+                t_el.text = str(m.features.get("form", ""))
+                for d in parts:
+                    etree.SubElement(t_el, "dtok", **_node_attrs(d, with_form=True))
+                t_el.tail = _tail(m)
+                for d in parts:
+                    _emit_empties(s_el, empty_after.get(d.anchors[0].token_start or 0, []))
+                continue
+            t_el = etree.SubElement(s_el, "tok", **_node_attrs(w))
+            t_el.text = str(w.features.get("form", ""))
+            t_el.tail = _tail(w)
+            _emit_empties(s_el, empty_after.get(ts, []))
+            i += 1
+
+    def _sentence_el(parent: etree._Element, s: Node) -> etree._Element:
+        attrs = {"id": s.id}
+        if sent_attrs:
+            for k, v in s.features.items():
+                if k.startswith("_") or isinstance(v, (dict, list, tuple)) or v is None:
+                    continue
+                name = k if _xml_attr_name_ok(k) else _xml_attr_name_safe(k)
+                if name != "id":
+                    attrs[name] = str(v)
+        return etree.SubElement(parent, "s", **attrs)
+
+    def _add_tokens_to_p(
+        p_el: etree._Element,
+        tok_list: list[Node],
+        sent_layer: Optional[Any],
+        container: Optional[Any] = None,
+    ) -> None:
+        """Append <s><tok>...</tok></s> to p_el for the given token list.
+
+        ``container(s_node, current_parent)``, when given, returns the element the sentence goes in
+        (for CoNLL-U newdoc / newpar: <doc> and <p>)."""
         if not tok_list:
             return
-
-        def _emit_tok(s_el: etree._Element, tok: Node) -> None:
-            omit_ord = document.meta.get("_omit_conllu_ord")
-            t_attrs = {"id": tok.id}
-            for k, v in tok.features.items():
-                if k in ("form", SPACE_AFTER_FEATURE, "spaceAfter"):
-                    continue
-                if omit_ord and k in ("ord", "ohead"):
-                    continue
-                t_attrs[k] = str(v)
-            t_el = etree.SubElement(s_el, "tok", **t_attrs)
-            t_el.text = str(tok.features.get("form", ""))
-            t_el.tail = " " if (tok.features.get(SPACE_AFTER_FEATURE) or tok.features.get("spaceAfter")) else ""
 
         if sent_layer:
             s_nodes = sorted(
@@ -705,6 +912,7 @@ def save_teitok(
                 if ts >= 0:
                     by_idx[ts] = t
 
+            parent = p_el
             for s in s_nodes:
                 start = s.anchors[0].token_start or 0
                 end = s.anchors[0].token_end or 0
@@ -715,15 +923,38 @@ def save_teitok(
                 in_this = [by_idx[i] for i in range(start, end + 1) if by_idx[i] is not None]
                 if not in_this:
                     continue
-                if len(p_el) > 0:
-                    p_el[-1].tail = "\n    "
-                s_el = etree.SubElement(p_el, "s", id=s.id)
-                for tok in in_this:
-                    _emit_tok(s_el, tok)
+                if container is not None:
+                    parent = container(s, parent)
+                if len(parent) > 0:
+                    parent[-1].tail = "\n    "
+                s_el = _sentence_el(parent, s)
+                _emit_sentence_tokens(s_el, in_this)
         else:
             s_el = etree.SubElement(p_el, "s", id="s-1")
-            for tok in tok_list:
-                _emit_tok(s_el, tok)
+            _emit_sentence_tokens(s_el, tok_list)
+
+    def _conllu_container(body: etree._Element) -> Any:
+        """newdoc → <doc id> (sentences directly in it until a newpar), newpar → <p org_id>
+        (as conllu2teitok.pl), else the current parent."""
+        state: dict[str, Any] = {"doc": None}
+
+        def pick(s: Node, current: etree._Element) -> etree._Element:
+            f = s.features
+            if "_newdoc" in f:
+                doc_el = etree.SubElement(body, "doc")
+                if f["_newdoc"]:
+                    doc_el.set("id", str(f["_newdoc"]))
+                state["doc"] = doc_el
+                if "_newpar" not in f:
+                    return doc_el
+            if "_newpar" in f:
+                p = etree.SubElement(state["doc"] if state["doc"] is not None else body, "p")
+                if f.get("_newpar"):
+                    p.set("org_id", str(f["_newpar"]))
+                return p
+            return current
+
+        return pick
 
     if has_structure:
         # Structure nodes in document order; use node.type for TEI element (head, list/item, quote, p).
@@ -838,9 +1069,17 @@ def save_teitok(
                 p_el = etree.SubElement(body_el, "p")
                 _set_block_content(p_el, node)
     else:
-        # No structure: single <p> with all tokens
-        p_el = etree.SubElement(body_el, "p")
-        _add_tokens_to_p(p_el, tokens, sentences_layer)
+        # No structure: one <p> with all tokens; CoNLL-U newdoc/newpar give <doc> and <p>
+        markers = sentences_layer is not None and any(
+            "_newdoc" in n.features or "_newpar" in n.features for n in sentences_layer.nodes.values()
+        )
+        if markers:
+            first = min(sentences_layer.nodes.values(), key=lambda n: n.anchors[0].token_start or 0)
+            p_el = body_el if ("_newdoc" in first.features or "_newpar" in first.features) else etree.SubElement(body_el, "p")
+            _add_tokens_to_p(p_el, tokens, sentences_layer, container=_conllu_container(body_el))
+        else:
+            p_el = etree.SubElement(body_el, "p")
+            _add_tokens_to_p(p_el, tokens, sentences_layer)
 
     # When we had structure but tokens don't have char anchors, we only emitted <p> with text.
     # If we had tokens and no char mapping, we need one <p> with all tokens.
@@ -849,7 +1088,7 @@ def save_teitok(
             el.get("id") for el in body_el.iter()
             if (el.tag or "").endswith("tok") or el.tag == "tok"
         }
-        if tokens and tokens_placed != {t.id for t in tokens}:
+        if tokens and not {t.id for t in tokens} <= tokens_placed:
             p_el = etree.SubElement(body_el, "p")
             _add_tokens_to_p(p_el, tokens, sentences_layer)
 

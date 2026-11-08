@@ -315,10 +315,9 @@ def save_html(document: Document, path: str) -> None:
     else:
         tokens_layer = document.layers.get("tokens")
         if tokens_layer and tokens_layer.nodes:
-            tokens = sorted(
-                tokens_layer.nodes.values(),
-                key=lambda n: (n.anchors[0].token_start or 0),
-            )
+            from ..core.surface import surface_tokens
+
+            tokens = surface_tokens(document)  # a contraction as written (del), not its words
             p = etree.SubElement(body, "p")
             p.text = " ".join(str(t.features.get("form", "")) for t in tokens)
 

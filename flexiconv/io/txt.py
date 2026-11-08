@@ -162,10 +162,9 @@ def document_to_plain_text(
             # Fallback: tokens or sentences as single block (e.g. TEI P5 loader has no structure / _teitok_tei_root)
             tokens_layer = document.layers.get("tokens")
             if tokens_layer and tokens_layer.nodes:
-                toks = sorted(
-                    tokens_layer.nodes.values(),
-                    key=lambda n: (n.anchors[0].token_start if n.anchors and n.anchors[0].token_start is not None else 0, n.id),
-                )
+                from ..core.surface import surface_tokens
+
+                toks = surface_tokens(document)  # a contraction as written (del), not its words
                 one_line = " ".join(str(n.features.get("form", "")) for n in toks)
                 if one_line.strip():
                     lines = [one_line]
