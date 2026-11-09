@@ -12,11 +12,18 @@ TEITOK-style TEI tree with:
 
 BASELINE (when present on TextBlock or TextLine) is output as the TEI @points
 attribute on the corresponding zone and on <lb>/<div>.
+
+Coordinates (ocr_coords.PageCoords): absolute pixel boxes by default, or
+relative ones (bbox="pct:x,y,w,h") with --option bbox=pct. The page's own
+pixel size goes on <pb> and <surface> as bbox="0 0 W H". MeasurementUnit
+mm10/inch1200 is converted to pixels with --option dpi=N; without a dpi,
+such boxes are written relative.
 """
 
 from __future__ import annotations
 
 import os
+import sys
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -24,25 +31,21 @@ from lxml import etree
 
 from ..core.model import Document
 from .hocr import _split_punct
+from .ocr_coords import PageCoords, parse_reader_option
 from .teitok_xml import _ensure_tei_header
 
 
-def _bbox_from_alto(el: etree._Element) -> str:
-    """Convert ALTO HPOS/VPOS/WIDTH/HEIGHT to bbox string 'xmin ymin xmax ymax'."""
+def _alto_number(el: etree._Element, name: str) -> Optional[float]:
     try:
-        hpos = float(el.get("HPOS") or "0")
-        vpos = float(el.get("VPOS") or "0")
-        width = float(el.get("WIDTH") or "0")
-        height = float(el.get("HEIGHT") or "0")
+        return float(el.get(name) or "")
     except ValueError:
-        return ""
-    if width <= 0 or height <= 0:
-        return ""
-    xmin = int(hpos)
-    ymin = int(vpos)
-    xmax = int(hpos + width)
-    ymax = int(vpos + height)
-    return f"{xmin} {ymin} {xmax} {ymax}"
+        return None
+
+
+def _bbox_from_alto(el: etree._Element, coords: PageCoords) -> str:
+    """ALTO HPOS/VPOS/WIDTH/HEIGHT as a TEITOK bbox value ("x1 y1 x2 y2" or "pct:x,y,w,h")."""
+    x, y, w, h = (_alto_number(el, a) or 0.0 for a in ("HPOS", "VPOS", "WIDTH", "HEIGHT"))
+    return coords.bbox(x, y, w, h)
 
 
 def _points_from_alto(el: etree._Element) -> Optional[str]:
@@ -65,6 +68,8 @@ def alto_to_tei_tree(
     path: str,
     *,
     nopunct: bool = False,
+    bbox: str = "abs",
+    dpi: Optional[float] = None,
 ) -> etree._Element:
     """
     Convert an ALTO XML file to a TEITOK-style TEI element tree.
@@ -75,6 +80,9 @@ def alto_to_tei_tree(
 
     Punctuation is optionally split off into separate <tok> (without bbox),
     similar to hOCR and PAGE XML handling.
+
+    bbox: "abs" (pixels) or "pct" (relative to the page); dpi: the scan
+    resolution, for ALTO files measured in mm10 or inch1200.
     """
     tree = etree.parse(path)
     root = tree.getroot()
@@ -98,6 +106,16 @@ def alto_to_tei_tree(
     )
     if file_name_nodes:
         image_url = "".join(file_name_nodes[0].itertext()).strip() or None
+    unit_nodes = root.xpath(".//*[local-name()='Description']/*[local-name()='MeasurementUnit']")
+    unit = ("".join(unit_nodes[0].itertext()).strip() if unit_nodes else "") or "pixel"
+
+    # Each warning once per file, not once per page.
+    warned: set = set()
+
+    def warn_once(message: str) -> None:
+        if message not in warned:
+            warned.add(message)
+            sys.stderr.write(f"[flexiconv] warning: {base}: {message}\n")
 
     page_idx = 0
     line_global_idx = 0
@@ -114,14 +132,22 @@ def alto_to_tei_tree(
             if txt:
                 page_image = txt
 
+        coords = PageCoords(mode=bbox, unit=unit, dpi=dpi,
+                            page_w=_alto_number(page, "WIDTH"), page_h=_alto_number(page, "HEIGHT"), warn=warn_once)
+        bbox_page = coords.page_bbox()
+
         facs_id = f"facs-{page_idx}"
         surface = etree.SubElement(facs_el, "surface", id=facs_id)
         if page_image:
             surface.set("facs", page_image)
+        if bbox_page:
+            surface.set("bbox", bbox_page)
 
         pb = etree.SubElement(text_el, "pb", id=page_id)
         if page_image:
             pb.set("facs", page_image)
+        if bbox_page:
+            pb.set("bbox", bbox_page)
 
         # Use PrintSpace when present; otherwise treat the whole Page as a single region.
         print_space_nodes = page.xpath("./*[local-name()='PrintSpace']")
@@ -130,8 +156,8 @@ def alto_to_tei_tree(
         block_idx = 0
         for block in regions_parent.xpath("./*[local-name()='TextBlock']"):
             block_idx += 1
-            bbox_block = _bbox_from_alto(block)
-            points_block = _points_from_alto(block)
+            bbox_block = _bbox_from_alto(block, coords)
+            points_block = coords.points(_points_from_alto(block))
             facs_block_id = f"{facs_id}.b{block_idx}"
             div_id = f"{page_id}.b{block_idx}"
 
@@ -156,8 +182,8 @@ def alto_to_tei_tree(
 
             # TextLines within the block.
             for line in block.xpath("./*[local-name()='TextLine']"):
-                bbox_line = _bbox_from_alto(line)
-                points_line = _points_from_alto(line)
+                bbox_line = _bbox_from_alto(line, coords)
+                points_line = coords.points(_points_from_alto(line))
 
                 line_global_idx += 1
                 facs_line_id = f"{facs_block_id}.l{line_global_idx}"
@@ -192,7 +218,7 @@ def alto_to_tei_tree(
                     continue
 
                 for w_idx, string_el in enumerate(strings, start=1):
-                    bbox_word = _bbox_from_alto(string_el)
+                    bbox_word = _bbox_from_alto(string_el, coords)
                     tok_id = string_el.get("ID") or f"w-{page_idx}.{line_global_idx}.{w_idx}"
                     text = string_el.get("CONTENT") or ""
                     text = text.strip()
@@ -231,9 +257,21 @@ def load_alto(
     *,
     doc_id: Optional[str] = None,
     nopunct: bool = False,
+    option: Optional[str] = None,
 ) -> Document:
-    """Load an ALTO XML file into a pivot Document with TEITOK-style TEI in meta."""
-    tei_root = alto_to_tei_tree(path, nopunct=nopunct)
+    """Load an ALTO XML file into a pivot Document with TEITOK-style TEI in meta.
+
+    option: --option string; bbox=abs|pct (absolute pixels, the default, or
+    relative boxes "pct:x,y,w,h"), dpi=N (scan resolution, for mm10/inch1200).
+    """
+    opts = parse_reader_option(option)
+    dpi: Optional[float] = None
+    if opts.get("dpi"):
+        try:
+            dpi = float(opts["dpi"])
+        except ValueError:
+            raise ValueError(f"ALTO option dpi={opts['dpi']!r} is not a number")
+    tei_root = alto_to_tei_tree(path, nopunct=nopunct, bbox=opts.get("bbox") or "abs", dpi=dpi)
     if doc_id is None:
         doc_id = path
     doc = Document(id=doc_id)

@@ -864,7 +864,8 @@ def _make_convert_parser(prog: str = "flexiconv convert") -> argparse.ArgumentPa
         "--option",
         help=(
             "Format-specific option (e.g. TMX: join|annotate; OPUS: lang=xx;spacing=…;combining=…; "
-            "CoNLL-U→TEITOK: split | max_tokens=N | max_sentences=N)."
+            "CoNLL-U→TEITOK: split | max_tokens=N | max_sentences=N; "
+            "ALTO: bbox=pct (relative boxes, pct:x,y,w,h) | dpi=N (for mm10/inch1200 coordinates))."
         ),
     )
     p.add_argument(
