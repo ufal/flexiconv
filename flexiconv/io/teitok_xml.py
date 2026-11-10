@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import pyexpat
 import re
 import shutil
 from io import BytesIO
@@ -270,16 +271,34 @@ _XML_NAME_CACHE: dict[str, bool] = {}
 
 
 def _xml_attr_name_ok(name: str) -> bool:
-    """Whether `name` can be an (unprefixed) XML attribute name; lxml decides."""
+    """Whether `name` can be an (unprefixed) XML attribute name for every parser downstream.
+
+    lxml/libxml2 follow the XML 1.0 5th-edition name rules, which allow almost any non-ASCII
+    character (`E₂.GAL`, `kostbârhêⁱt`, hieroglyphs); expat (Python's xml.*, XML::Parser) keeps
+    the stricter 4th-edition rules and rejects such files as "not well-formed". So a name must
+    pass both: lxml first (which also rules out whitespace, quotes, `<`, `=`), then expat.
+    """
     ok = _XML_NAME_CACHE.get(name)
     if ok is None:
         try:
             etree.Element("t").set(name, "")
-            ok = ":" not in name
+            ok = ":" not in name and _expat_name_ok(name)
         except ValueError:
             ok = False
         _XML_NAME_CACHE[name] = ok
     return ok
+
+
+def _expat_name_ok(name: str) -> bool:
+    """Whether expat accepts `name` as an attribute name (only called on names lxml accepted)."""
+    if name.isascii():
+        return True  # the ASCII name rules are the same in both editions
+    parser = pyexpat.ParserCreate("UTF-8")
+    try:
+        parser.Parse(b'<t ' + name.encode("utf-8") + b'=""/>', True)
+    except pyexpat.ExpatError:
+        return False
+    return True
 
 
 def _xml_attr_name_safe(name: str) -> str:
@@ -365,10 +384,15 @@ def load_teitok(path: str, *, doc_id: Optional[str] = None) -> Document:
         for attr, val in el.attrib.items():
             if isinstance(attr, str) and attr.startswith("misc_"):
                 features[attr] = val if val != "" else True  # misc_KEY="" is a bare item
-        for part in (el.get("misc") or "").split("|"):
-            if part and part != "_":
+        # A key repeated in @misc gives a list (in order); a misc_KEY attribute wins over @misc.
+        verbatim: dict[str, list[Any]] = {}
+        raw_misc = el.get("misc") or ""
+        for part in ("" if raw_misc == "_" else raw_misc).split("|"):
+            if part:  # `_` items inside a longer cell are data (Akkadian-RIAO `_|_`)
                 k, eq, v = part.partition("=")
-                features.setdefault(f"misc_{k}", v if eq else True)
+                verbatim.setdefault(f"misc_{k}", []).append(v if eq else True)
+        for key, vals in verbatim.items():
+            features.setdefault(key, vals[0] if len(vals) == 1 else vals)
         return features
 
     def _ancestor(el: etree._Element, name: str) -> Optional[etree._Element]:
@@ -818,9 +842,12 @@ def save_teitok(
                 continue
             if k.startswith("misc_"):
                 # MISC: misc_KEY="value", a bare item misc_KEY=""; kept verbatim in @misc when KEY
-                # is no XML name (e.g. `LMSeg:a-b`) or the value is empty (`Gloss=`)
+                # is no XML name for lxml and expat (`LMSeg:a-b`, `E₂.GAL`), the value is empty
+                # (`Gloss=`), or the key occurs more than once (a list value)
                 item = k[len("misc_"):]
-                if v is True and _xml_attr_name_ok(k):
+                if isinstance(v, list):  # a key repeated in MISC: all its items verbatim in @misc
+                    raw_misc.extend(item if x is True else f"{item}={x}" for x in v)
+                elif v is True and _xml_attr_name_ok(k):
                     attrs[k] = ""
                 elif v is not True and str(v) != "" and _xml_attr_name_ok(k):
                     attrs[k] = str(v)

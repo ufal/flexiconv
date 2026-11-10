@@ -42,19 +42,31 @@ def _is_file_comment(content: str) -> bool:
 
 
 def _parse_misc(raw: str) -> Dict[str, Any]:
-    """MISC items: ``K=V`` → ``"V"`` (``K=`` → ``""``), a bare ``K`` → ``True``."""
+    """MISC items: ``K=V`` → ``"V"`` (``K=`` → ``""``), a bare ``K`` → ``True``.
+
+    A key that occurs more than once (Egyptian-PC ``Hierocl=𓂑|Hierocl=𓏤``, Akkadian-RIAO bare
+    ``2|2``) keeps every item: its value is then a list, in the order of the column.
+    """
     misc: Dict[str, Any] = {}
     if not raw or raw == "_":
         return misc
     for part in raw.split("|"):
         if not part:
             continue
-        if "=" in part:
-            k, v = part.split("=", 1)
-            misc[k] = v
+        k, eq, v = part.partition("=")
+        val: Any = v if eq else True  # a bare item: written back bare
+        if k in misc:
+            prev = misc[k]
+            misc[k] = (prev if isinstance(prev, list) else [prev]) + [val]
         else:
-            misc[part] = True  # a bare item: written back bare
+            misc[k] = val
     return misc
+
+
+def _misc_items(key: str, value: Any) -> List[str]:
+    """The MISC item(s) of one key: ``K=V``, a bare ``K``, or several for a list value."""
+    values = value if isinstance(value, list) else [value]
+    return [key if v is True else f"{key}={v}" for v in values]
 
 
 def _format_misc(misc: Dict[str, Any]) -> str:
@@ -62,11 +74,7 @@ def _format_misc(misc: Dict[str, Any]) -> str:
         return "_"
     parts: List[str] = []
     for k in sorted(misc.keys()):
-        v = misc[k]
-        if v is True:
-            parts.append(k)
-        else:
-            parts.append(f"{k}={v}")
+        parts.extend(_misc_items(k, misc[k]))
     return "|".join(parts) if parts else "_"
 
 
@@ -668,7 +676,10 @@ def save_conllu(
             misc["SpaceAfter"] = "No"
         for key, value in f.items():
             if key.startswith("misc_"):
-                misc[key[len("misc_"):]] = value if value is True else str(value)
+                if isinstance(value, list):
+                    misc[key[len("misc_"):]] = [v if v is True else str(v) for v in value]
+                else:
+                    misc[key[len("misc_"):]] = value if value is True else str(value)
         return _format_misc(misc)
 
     lines: List[str] = []

@@ -86,7 +86,8 @@ def _w_attrs(tok: Node) -> dict:
     for k, v in tok.features.items():
         if k == "form" or k.startswith("_"):
             continue
-        attrs[k if _xml_attr_name_ok(k) else _xml_attr_name_safe(k)] = str(v)
+        val = "|".join(str(x) for x in v) if isinstance(v, list) else str(v)  # a repeated MISC key
+        attrs[k if _xml_attr_name_ok(k) else _xml_attr_name_safe(k)] = val
     return attrs
 
 
